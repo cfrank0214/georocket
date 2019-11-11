@@ -34,11 +34,11 @@ public class MimeTypeUtilsTest {
    */
   @Test
   public void testBelongsTo() {
-    assertTrue(belongsTo("application/gml+xml", "application", "xml"));
-    assertTrue(belongsTo("application/exp+xml", "application", "xml"));
-    assertTrue(belongsTo("application/xml", "application", "xml"));
-    assertFalse(belongsTo("application/exp+xml", "text", "xml"));
-    assertFalse(belongsTo("application/exp+xml", "application", "json"));
+    assertTrue(INSTANCE.belongsTo("application/gml+xml", "application", "xml"));
+    assertTrue(INSTANCE.belongsTo("application/exp+xml", "application", "xml"));
+    assertTrue(INSTANCE.belongsTo("application/xml", "application", "xml"));
+    assertFalse(INSTANCE.belongsTo("application/exp+xml", "text", "xml"));
+    assertFalse(INSTANCE.belongsTo("application/exp+xml", "application", "json"));
   }
   
   /**
@@ -49,7 +49,7 @@ public class MimeTypeUtilsTest {
   public void detectJSON() throws IOException {
     File tempFile = folder.newFile();
     FileUtils.write(tempFile, "   \n  {\"name\": \"Elvis\"}", StandardCharsets.UTF_8);
-    assertEquals(JSON, detect(tempFile));
+    assertEquals(INSTANCE.getJSON(), detect(tempFile));
   }
   
   /**
@@ -60,7 +60,7 @@ public class MimeTypeUtilsTest {
   public void detectXML() throws IOException {
     File tempFile = folder.newFile();
     FileUtils.write(tempFile, "   \n\n\n  <root></root>  ", StandardCharsets.UTF_8);
-    assertEquals(XML, detect(tempFile));
+    assertEquals(INSTANCE.getXML(), detect(tempFile));
   }
   
   /**

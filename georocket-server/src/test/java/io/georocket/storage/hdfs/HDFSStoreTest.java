@@ -50,8 +50,8 @@ public class HDFSStoreTest extends StorageTest {
     // prevent exception -> http://stackoverflow.com/questions/19840056/failed-to-detect-a-valid-hadoop-home-directory
     System.setProperty("hadoop.home.dir", "/");
 
-    config.put(ConfigConstants.STORAGE_HDFS_PATH, hdfsLocalRoot);
-    config.put(ConfigConstants.STORAGE_HDFS_DEFAULT_FS, hdfsAdress);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_HDFS_PATH(), hdfsLocalRoot);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_HDFS_DEFAULT_FS(), hdfsAdress);
   }
 
   @Override

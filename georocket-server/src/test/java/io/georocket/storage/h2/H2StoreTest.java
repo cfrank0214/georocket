@@ -53,7 +53,7 @@ public class H2StoreTest extends StorageTest {
   
   private void configureVertx(Vertx vertx) {
     JsonObject config = vertx.getOrCreateContext().config();
-    config.put(ConfigConstants.STORAGE_H2_PATH, path);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_H2_PATH(), path);
   }
 
   @Override

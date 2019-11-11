@@ -1,99 +1,87 @@
-package io.georocket.storage;
+package io.georocket.storage
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Pair
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import rx.Observable;
-import rx.Producer;
-import rx.internal.operators.BackpressureUtils;
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
+import rx.Observable
+import rx.Producer
+import rx.internal.operators.BackpressureUtils
 
 /**
- * Wraps around {@link StoreCursor} so it can be used with RxJava
+ * Wraps around [StoreCursor] so it can be used with RxJava
  * @author Michel Kraemer
  */
-public class RxStoreCursor implements StoreCursor {
-  private final StoreCursor delegate;
+class RxStoreCursor
+/**
+ * Create a new rx-ified cursor
+ * @param delegate the actual cursor to delegate to
+ */
+(
+        /**
+         * @return the actual non-rx-ified cursor
+         */
+        val delegate: StoreCursor) : StoreCursor {
 
-  /**
-   * Create a new rx-ified cursor
-   * @param delegate the actual cursor to delegate to
-   */
-  public RxStoreCursor(StoreCursor delegate) {
-    this.delegate = delegate;
-  }
-  
-  /**
-   * @return the actual non-rx-ified cursor
-   */
-  public StoreCursor getDelegate() {
-    return delegate;
-  }
+    override fun hasNext(): Boolean {
+        return delegate.hasNext()
+    }
 
-  @Override
-  public boolean hasNext() {
-    return delegate.hasNext();
-  }
+    override fun next(handler: Handler<AsyncResult<ChunkMeta>>) {
+        delegate.next(handler)
+    }
 
-  @Override
-  public void next(Handler<AsyncResult<ChunkMeta>> handler) {
-    delegate.next(handler);
-  }
+    override fun getChunkPath(): String {
+        return delegate.chunkPath
+    }
 
-  @Override
-  public String getChunkPath() {
-    return delegate.getChunkPath();
-  }
+    override fun getInfo(): CursorInfo {
+        return delegate.info
+    }
 
-  @Override
-  public CursorInfo getInfo() {
-    return delegate.getInfo();
-  }
+    /**
+     * Convert this cursor to an observable
+     * @return an observable emitting the chunks from the cursor and their
+     * respective path in the store (retrieved via [.getChunkPath])
+     */
+    fun toObservable(): Observable<Pair<ChunkMeta, String>> {
+        return Observable.unsafeCreate { s ->
+            s.setProducer(object : Producer {
+                private val requested = AtomicLong()
 
-  /**
-   * Convert this cursor to an observable
-   * @return an observable emitting the chunks from the cursor and their
-   * respective path in the store (retrieved via {@link #getChunkPath()})
-   */
-  public Observable<Pair<ChunkMeta, String>> toObservable() {
-    return Observable.unsafeCreate(s -> {
-      s.setProducer(new Producer() {
-        private AtomicLong requested = new AtomicLong();
-        
-        @Override
-        public void request(long n) {
-          if (n > 0 && !s.isUnsubscribed() &&
-              BackpressureUtils.getAndAddRequest(requested, n) == 0) {
-            drain();
-          }
+                override fun request(n: Long) {
+                    if (n > 0 && !s.isUnsubscribed &&
+                            BackpressureUtils.getAndAddRequest(requested, n) == 0L) {
+                        drain()
+                    }
+                }
+
+                private fun drain() {
+                    if (requested.get() > 0) {
+                        if (!hasNext()) {
+                            if (!s.isUnsubscribed) {
+                                s.onCompleted()
+                            }
+                            return
+                        }
+
+                        next { ar ->
+                            if (s.isUnsubscribed) {
+                                return@next
+                            }
+                            if (ar.failed()) {
+                                s.onError(ar.cause())
+                            } else {
+                                s.onNext(Pair.of(ar.result(), chunkPath))
+                                requested.decrementAndGet()
+                                drain()
+                            }
+                        }
+                    }
+                }
+            })
         }
-        
-        private void drain() {
-          if (requested.get() > 0) {
-            if (!hasNext()) {
-              if (!s.isUnsubscribed()) {
-                s.onCompleted();
-              }
-              return;
-            }
-            
-            next(ar -> {
-              if (s.isUnsubscribed()) {
-                return;
-              }
-              if (ar.failed()) {
-                s.onError(ar.cause());
-              } else {
-                s.onNext(Pair.of(ar.result(), getChunkPath()));
-                requested.decrementAndGet();
-                drain();
-              }
-            });
-          }
-        }
-      });
-    });
-  }
+    }
 }

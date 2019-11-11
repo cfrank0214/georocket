@@ -1,50 +1,36 @@
-package io.georocket.tasks;
+package io.georocket.tasks
 
 /**
- * A task started by the {@link io.georocket.ImporterVerticle}
+ * A task started by the [io.georocket.ImporterVerticle]
  * @author Michel Kraemer
  */
-public class ImportingTask extends AbstractTask {
-  private long importedChunks;
+class ImportingTask : AbstractTask {
+    /**
+     * Get the number of chunks already imported by this task
+     * @return the number of imported chunks
+     */
+    /**
+     * Set the number of chunks already imported by this task
+     * @param importedChunks the number of imported chunks
+     */
+    var importedChunks: Long = 0
 
-  /**
-   * Package-visible default constructor
-   */
-  ImportingTask() {
-    // nothing to do here
-  }
-
-  /**
-   * Default constructor
-   * @param correlationId the correlation ID this task belongs to
-   */
-  public ImportingTask(String correlationId) {
-    super(correlationId);
-  }
-
-  /**
-   * Get the number of chunks already imported by this task
-   * @return the number of imported chunks
-   */
-  public long getImportedChunks() {
-    return importedChunks;
-  }
-
-  /**
-   * Set the number of chunks already imported by this task
-   * @param importedChunks the number of imported chunks
-   */
-  public void setImportedChunks(long importedChunks) {
-    this.importedChunks = importedChunks;
-  }
-
-  @Override
-  public void inc(Task other) {
-    if (!(other instanceof ImportingTask)) {
-      throw new IllegalArgumentException("Illegal task type");
+    /**
+     * Package-visible default constructor
+     */
+    internal constructor() {
+        // nothing to do here
     }
-    ImportingTask io = (ImportingTask)other;
-    super.inc(other);
-    setImportedChunks(getImportedChunks() + io.getImportedChunks());
-  }
+
+    /**
+     * Default constructor
+     * @param correlationId the correlation ID this task belongs to
+     */
+    constructor(correlationId: String) : super(correlationId) {}
+
+    override fun inc(other: Task) {
+        require(other is ImportingTask) { "Illegal task type" }
+        super.inc(other)
+        importedChunks = importedChunks + other.importedChunks
+    }
 }

@@ -1,38 +1,35 @@
-package io.georocket.index.generic;
+package io.georocket.index.generic
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashMap
 
-import io.georocket.index.xml.MetaIndexer;
-import io.georocket.storage.ChunkMeta;
-import io.georocket.storage.IndexMeta;
+import io.georocket.index.xml.MetaIndexer
+import io.georocket.storage.ChunkMeta
+import io.georocket.storage.IndexMeta
 
 /**
- * Default implementation of {@link MetaIndexer} that extracts generic
+ * Default implementation of [MetaIndexer] that extracts generic
  * attributes from chunk metadata and adds it to the index.
  * @author Michel Kraemer
  */
-public class DefaultMetaIndexer implements MetaIndexer {
-  private final Map<String, Object> result = new HashMap<>();
+class DefaultMetaIndexer : MetaIndexer {
+    private val result = HashMap<String, Any>()
 
-  @Override
-  public Map<String, Object> getResult() {
-    return result;
-  }
+    override fun getResult(): Map<String, Any> {
+        return result
+    }
 
-  @Override
-  public void onIndexChunk(String path, ChunkMeta chunkMeta,
-      IndexMeta indexMeta) {
-    result.put("path", path);
-    result.put("chunkMeta", chunkMeta.toJsonObject());
-    if (indexMeta.getTags() != null) {
-      result.put("tags", indexMeta.getTags());
+    override fun onIndexChunk(path: String, chunkMeta: ChunkMeta,
+                              indexMeta: IndexMeta) {
+        result["path"] = path
+        result["chunkMeta"] = chunkMeta.toJsonObject()
+        if (indexMeta.tags != null) {
+            result["tags"] = indexMeta.tags
+        }
+        if (indexMeta.properties != null) {
+            result["props"] = indexMeta.properties
+        }
+        if (indexMeta.correlationId != null) {
+            result["correlationId"] = indexMeta.correlationId
+        }
     }
-    if (indexMeta.getProperties() != null) {
-      result.put("props", indexMeta.getProperties());
-    }
-    if (indexMeta.getCorrelationId() != null) {
-      result.put("correlationId", indexMeta.getCorrelationId());
-    }
-  }
 }

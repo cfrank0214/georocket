@@ -1,30 +1,28 @@
-package io.georocket.output.xml;
+package io.georocket.output.xml
 
-import io.georocket.storage.XMLChunkMeta;
-import rx.Completable;
-import rx.Single;
+import io.georocket.storage.XMLChunkMeta
+import rx.Completable
+import rx.Single
 
 /**
  * Merge chunks whose root XML elements are all equal
  * @author Michel Kraemer
  */
-public class AllSameStrategy extends AbstractMergeStrategy {
-  @Override
-  public Single<Boolean> canMerge(XMLChunkMeta meta) {
-    return Single.defer(() -> {
-      if (getParents() == null || getParents().equals(meta.getParents())) {
-        return Single.just(Boolean.TRUE);
-      } else {
-        return Single.just(Boolean.FALSE);
-      }
-    });
-  }
-
-  @Override
-  protected Completable mergeParents(XMLChunkMeta meta) {
-    if (getParents() == null) {
-      setParents(meta.getParents());
+class AllSameStrategy : AbstractMergeStrategy() {
+    override fun canMerge(meta: XMLChunkMeta): Single<Boolean> {
+        return Single.defer {
+            if (parents == null || parents == meta.parents) {
+                return@Single.defer Single . just < Boolean >(java.lang.Boolean.TRUE)
+            } else {
+                return@Single.defer Single . just < Boolean >(java.lang.Boolean.FALSE)
+            }
+        }
     }
-    return Completable.complete();
-  }
+
+    override fun mergeParents(meta: XMLChunkMeta): Completable {
+        if (parents == null) {
+            parents = meta.parents
+        }
+        return Completable.complete()
+    }
 }

@@ -1,141 +1,131 @@
-package io.georocket.index;
+package io.georocket.index
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import io.georocket.constants.ConfigConstants;
-import io.vertx.core.Context;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
+import io.georocket.constants.ConfigConstants
+import io.vertx.core.Context
+import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * A cache for chunks that are about to be indexed. The cache keeps chunks only
  * until they have been requested or until a configurable time has passed (see
- * {@link ConfigConstants#INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS}). The
+ * [ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS]). The
  * cache has a configurable maximum size (see
- * {@link ConfigConstants#INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE}).
+ * [ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE]).
  * @author Michel Kraemer
  */
-public class IndexableChunkCache {
-  /**
-   * A private class holding the singleton instance of this class
-   */
-  private static class LazyHolder {
-    static final IndexableChunkCache INSTANCE = new IndexableChunkCache();
-  }
+class IndexableChunkCache
+/**
+ * Create a new cache
+ * @param maximumSize the cache's maximum size in bytes
+ * @param maximumTime the maximum number of seconds a chunk stays in the cache
+ */
+@JvmOverloads internal constructor(private val maximumSize: Long = currentContext.config().getLong(ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE,
+        ConfigConstants.DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE)!!, maximumTime: Long = currentContext.config().getLong(ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS,
+        ConfigConstants.DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS)!!) {
+    private val cache: Cache<String, Buffer>
+    private val size = AtomicLong()
 
-  private final long maximumSize;
-  private final Cache<String, Buffer> cache;
-  private final AtomicLong size = new AtomicLong();
+    /**
+     * Get the number of chunks currently in the cache
+     * @return the number of chunks
+     */
+    val numberOfChunks: Long
+        get() = cache.size()
 
-  /**
-   * Get the current Vert.x context
-   * @return the context
-   * @throws RuntimeException if the method was not called from within a
-   * Vert.x context
-   */
-  private static Context getCurrentContext() {
-    Context ctx = Vertx.currentContext();
-    if (ctx == null) {
-      throw new RuntimeException("This class must be initiated within " +
-        "a Vert.x context");
+    /**
+     * A private class holding the singleton instance of this class
+     */
+    private object LazyHolder {
+        internal val INSTANCE = IndexableChunkCache()
     }
-    return ctx;
-  }
 
-  /***
-   * Create a new cache
-   */
-  IndexableChunkCache() {
-    this(getCurrentContext().config().getLong(ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE,
-            ConfigConstants.DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE),
-        getCurrentContext().config().getLong(ConfigConstants.INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS,
-            ConfigConstants.DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS));
-  }
+    init {
+        cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(maximumTime, TimeUnit.SECONDS)
+                .removalListener<String, Buffer> { n -> size.addAndGet((-n.value.length()).toLong()) }
+                .build()
+    }
 
-  /**
-   * Create a new cache
-   * @param maximumSize the cache's maximum size in bytes
-   * @param maximumTime the maximum number of seconds a chunk stays in the cache
-   */
-  IndexableChunkCache(long maximumSize, long maximumTime) {
-    this.maximumSize = maximumSize;
-    cache = CacheBuilder.newBuilder()
-      .expireAfterWrite(maximumTime, TimeUnit.SECONDS)
-      .<String, Buffer>removalListener(n -> size.addAndGet(-n.getValue().length()))
-      .build();
-  }
-
-  /**
-   * Gets the singleton instance of this class. Must be called from within a
-   * Vert.x context.
-   * @return the singleton instance
-   * @throws RuntimeException if the method was not called from within a
-   * Vert.x context
-   */
-  public static IndexableChunkCache getInstance() {
-    return LazyHolder.INSTANCE;
-  }
-
-  /**
-   * Adds a chunk to the cache. Do nothing if adding the chunk would exceed
-   * the cache's maximum size
-   * @param path the chunk's path
-   * @param chunk the chunk
-   */
-  public void put(String path, Buffer chunk) {
-    long chunkSize = chunk.length();
-    long oldSize;
-    long newSize;
-    boolean cleanUpCalled = false;
-    while (true) {
-      oldSize = size.get();
-      newSize = oldSize + chunkSize;
-      if (newSize > maximumSize) {
-        // make sure the chunk can be added if there were still some
-        // removal events pending
-        if (!cleanUpCalled) {
-          cleanUpCalled = true;
-          cache.cleanUp();
-          continue;
+    /**
+     * Adds a chunk to the cache. Do nothing if adding the chunk would exceed
+     * the cache's maximum size
+     * @param path the chunk's path
+     * @param chunk the chunk
+     */
+    fun put(path: String, chunk: Buffer) {
+        val chunkSize = chunk.length().toLong()
+        var oldSize: Long
+        var newSize: Long
+        var cleanUpCalled = false
+        while (true) {
+            oldSize = size.get()
+            newSize = oldSize + chunkSize
+            if (newSize > maximumSize) {
+                // make sure the chunk can be added if there were still some
+                // removal events pending
+                if (!cleanUpCalled) {
+                    cleanUpCalled = true
+                    cache.cleanUp()
+                    continue
+                }
+                return
+            }
+            if (size.compareAndSet(oldSize, newSize)) {
+                break
+            }
         }
-        return;
-      }
-      if (size.compareAndSet(oldSize, newSize)) {
-        break;
-      }
+        cache.put(path, chunk)
     }
-    cache.put(path, chunk);
-  }
 
-  /**
-   * Gets and removes a chunk from the cache
-   * @param path the chunk's path
-   * @return the chunk or {@code null} if the chunk was not found in the cache
-   */
-  public Buffer get(String path) {
-    Buffer r = cache.getIfPresent(path);
-    if (r != null) {
-      cache.invalidate(path);
+    /**
+     * Gets and removes a chunk from the cache
+     * @param path the chunk's path
+     * @return the chunk or `null` if the chunk was not found in the cache
+     */
+    operator fun get(path: String): Buffer? {
+        val r = cache.getIfPresent(path)
+        if (r != null) {
+            cache.invalidate(path)
+        }
+        return r
     }
-    return r;
-  }
 
-  /**
-   * Get the cache's size in bytes
-   * @return the size
-   */
-  public long getSize() {
-    return size.get();
-  }
+    /**
+     * Get the cache's size in bytes
+     * @return the size
+     */
+    fun getSize(): Long {
+        return size.get()
+    }
 
-  /**
-   * Get the number of chunks currently in the cache
-   * @return the number of chunks
-   */
-  public long getNumberOfChunks() {
-    return cache.size();
-  }
+    companion object {
+
+        /**
+         * Get the current Vert.x context
+         * @return the context
+         * @throws RuntimeException if the method was not called from within a
+         * Vert.x context
+         */
+        private val currentContext: Context
+            get() = Vertx.currentContext()
+                    ?: throw RuntimeException("This class must be initiated within " + "a Vert.x context")
+
+        /**
+         * Gets the singleton instance of this class. Must be called from within a
+         * Vert.x context.
+         * @return the singleton instance
+         * @throws RuntimeException if the method was not called from within a
+         * Vert.x context
+         */
+        val instance: IndexableChunkCache
+            get() = LazyHolder.INSTANCE
+    }
 }
+/***
+ * Create a new cache
+ */

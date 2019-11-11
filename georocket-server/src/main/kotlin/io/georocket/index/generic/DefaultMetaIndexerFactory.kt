@@ -1,113 +1,93 @@
-package io.georocket.index.generic;
+package io.georocket.index.generic
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+import java.io.IOException
+import java.io.InputStream
 
-import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.Yaml
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap
 
-import io.georocket.index.xml.MetaIndexer;
-import io.georocket.index.xml.MetaIndexerFactory;
-import io.georocket.query.ElasticsearchQueryHelper;
-import io.georocket.query.KeyValueQueryPart;
-import io.georocket.query.QueryPart;
-import io.georocket.query.StringQueryPart;
-import io.georocket.query.KeyValueQueryPart.ComparisonOperator;
-import io.vertx.core.json.JsonObject;
+import io.georocket.index.xml.MetaIndexer
+import io.georocket.index.xml.MetaIndexerFactory
+import io.georocket.query.ElasticsearchQueryHelper
+import io.georocket.query.KeyValueQueryPart
+import io.georocket.query.QueryPart
+import io.georocket.query.StringQueryPart
+import io.georocket.query.KeyValueQueryPart.ComparisonOperator
+import io.vertx.core.json.JsonObject
 
 /**
- * Factory for {@link DefaultMetaIndexer} instances. Contains default mappings
+ * Factory for [DefaultMetaIndexer] instances. Contains default mappings
  * required for essential GeoRocket indexer operations.
  * @author Michel Kraemer
  */
-public class DefaultMetaIndexerFactory implements MetaIndexerFactory {
-  private final Map<String, Object> mappings;
+class DefaultMetaIndexerFactory : MetaIndexerFactory {
+    private val mappings: Map<String, Any>
 
-  /**
-   * Default constructor
-   */
-  @SuppressWarnings("unchecked")
-  public DefaultMetaIndexerFactory() {
-    // load default mapping
-    Yaml yaml = new Yaml();
-    Map<String, Object> mappings;
-    try (InputStream is = this.getClass().getResourceAsStream("index_defaults.yaml")) {
-      mappings = (Map<String, Object>)yaml.load(is);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not load default mappings", e);
-    }
-
-    // remove unnecessary node
-    mappings.remove("variables");
-
-    this.mappings = ImmutableMap.copyOf(mappings);
-  }
-
-  @Override
-  public Map<String, Object> getMapping() {
-    return mappings;
-  }
-
-  @Override
-  public MatchPriority getQueryPriority(QueryPart queryPart) {
-    if (queryPart instanceof StringQueryPart ||
-            queryPart instanceof KeyValueQueryPart) {
-      return MatchPriority.SHOULD;
-    }
-    return MatchPriority.NONE;
-  }
-
-  @Override
-  public JsonObject compileQuery(QueryPart queryPart) {
-    JsonObject result = null;
-    if (queryPart instanceof StringQueryPart) {
-      // match values of all fields regardless of their name
-      String search = ((StringQueryPart)queryPart).getSearchString();
-      result = ElasticsearchQueryHelper.termQuery("tags", search);
-    } else if (queryPart instanceof KeyValueQueryPart) {
-      KeyValueQueryPart kvqp = (KeyValueQueryPart)queryPart;
-      String key = kvqp.getKey();
-      String value = kvqp.getValue();
-      ComparisonOperator comp = kvqp.getComparisonOperator();
-
-      switch (comp) {
-        case EQ:
-          result = ElasticsearchQueryHelper.termQuery("props." + key, value);
-          break;
-        case GT:
-          result = ElasticsearchQueryHelper.gtQuery("props." + key, value);
-          break;
-        case GTE:
-          result = ElasticsearchQueryHelper.gteQuery("props." + key, value);
-          break;
-        case LT:
-          result = ElasticsearchQueryHelper.ltQuery("props." + key, value);
-          break;
-        case LTE:
-          result = ElasticsearchQueryHelper.lteQuery("props." + key, value);
-          break;
-      }
-
-      if (kvqp.getComparisonOperator() == ComparisonOperator.EQ &&
-          "correlationId".equals(kvqp.getKey())) {
-        JsonObject cq = ElasticsearchQueryHelper.termQuery("correlationId", value);
-        if (result != null) {
-          JsonObject bool = ElasticsearchQueryHelper.boolQuery(1);
-          ElasticsearchQueryHelper.boolAddShould(bool, result);
-          ElasticsearchQueryHelper.boolAddShould(bool, cq);
-          result = bool;
-        } else {
-          result = cq;
+    /**
+     * Default constructor
+     */
+    init {
+        // load default mapping
+        val yaml = Yaml()
+        var mappings: MutableMap<String, Any>
+        try {
+            this.javaClass.getResourceAsStream("index_defaults.yaml").use { `is` -> mappings = yaml.load<Any>(`is`) as Map<String, Any> }
+        } catch (e: IOException) {
+            throw RuntimeException("Could not load default mappings", e)
         }
-      }
-    }
-    return result;
-  }
 
-  @Override
-  public MetaIndexer createIndexer() {
-    return new DefaultMetaIndexer();
-  }
+        // remove unnecessary node
+        mappings.remove("variables")
+
+        this.mappings = ImmutableMap.copyOf(mappings)
+    }
+
+    override fun getMapping(): Map<String, Any> {
+        return mappings
+    }
+
+    override fun getQueryPriority(queryPart: QueryPart): QueryCompiler.MatchPriority {
+        return if (queryPart is StringQueryPart || queryPart is KeyValueQueryPart) {
+            QueryCompiler.MatchPriority.SHOULD
+        } else QueryCompiler.MatchPriority.NONE
+    }
+
+    override fun compileQuery(queryPart: QueryPart): JsonObject? {
+        var result: JsonObject? = null
+        if (queryPart is StringQueryPart) {
+            // match values of all fields regardless of their name
+            val search = queryPart.searchString
+            result = ElasticsearchQueryHelper.termQuery("tags", search)
+        } else if (queryPart is KeyValueQueryPart) {
+            val key = queryPart.key
+            val value = queryPart.value
+            val comp = queryPart.comparisonOperator
+
+            when (comp) {
+                KeyValueQueryPart.ComparisonOperator.EQ -> result = ElasticsearchQueryHelper.termQuery("props.$key", value)
+                KeyValueQueryPart.ComparisonOperator.GT -> result = ElasticsearchQueryHelper.gtQuery("props.$key", value)
+                KeyValueQueryPart.ComparisonOperator.GTE -> result = ElasticsearchQueryHelper.gteQuery("props.$key", value)
+                KeyValueQueryPart.ComparisonOperator.LT -> result = ElasticsearchQueryHelper.ltQuery("props.$key", value)
+                KeyValueQueryPart.ComparisonOperator.LTE -> result = ElasticsearchQueryHelper.lteQuery("props.$key", value)
+            }
+
+            if (queryPart.comparisonOperator == ComparisonOperator.EQ && "correlationId" == queryPart.key) {
+                val cq = ElasticsearchQueryHelper.termQuery("correlationId", value)
+                if (result != null) {
+                    val bool = ElasticsearchQueryHelper.boolQuery(1)
+                    ElasticsearchQueryHelper.boolAddShould(bool, result)
+                    ElasticsearchQueryHelper.boolAddShould(bool, cq)
+                    result = bool
+                } else {
+                    result = cq
+                }
+            }
+        }
+        return result
+    }
+
+    override fun createIndexer(): MetaIndexer {
+        return DefaultMetaIndexer()
+    }
 }

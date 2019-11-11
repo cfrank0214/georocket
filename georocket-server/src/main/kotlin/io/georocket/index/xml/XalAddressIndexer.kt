@@ -1,92 +1,87 @@
-package io.georocket.index.xml;
+package io.georocket.index.xml
 
-import com.google.common.collect.ImmutableMap;
-import io.georocket.util.XMLStreamEvent;
+import com.google.common.collect.ImmutableMap
+import io.georocket.util.XMLStreamEvent
 
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import java.util.HashMap;
-import java.util.Map;
+import javax.xml.stream.XMLStreamReader
+import javax.xml.stream.events.XMLEvent
+import java.util.HashMap
 
 /**
- * <p>Indexes XAL 2.0 addresses. Currently it supports the following structure:</p>
+ *
+ * Indexes XAL 2.0 addresses. Currently it supports the following structure:
  *
  * <pre>
  * &lt;xal:AddressDetails&gt;
- *   &lt;xal:Country&gt;
- *     &lt;xal:CountryName&gt;My Country&lt;/xal:CountryName&gt;
- *     &lt;xal:Locality Type="Town"&gt;
- *       &lt;xal:LocalityName&gt;My City&lt;/xal:LocalityName&gt;
- *       &lt;xal:Thoroughfare Type="Street"&gt;
- *         &lt;xal:ThoroughfareName&gt;My Street&lt;/xal:ThoroughfareName&gt;
- *         &lt;xal:ThoroughfareNumber&gt;1&lt;/xal:ThoroughfareNumber&gt;
- *       &lt;/xal:Thoroughfare&gt;
- *     &lt;/xal:Locality&gt;
- *   &lt;/xal:Country&gt;
+ * &lt;xal:Country&gt;
+ * &lt;xal:CountryName&gt;My Country&lt;/xal:CountryName&gt;
+ * &lt;xal:Locality Type="Town"&gt;
+ * &lt;xal:LocalityName&gt;My City&lt;/xal:LocalityName&gt;
+ * &lt;xal:Thoroughfare Type="Street"&gt;
+ * &lt;xal:ThoroughfareName&gt;My Street&lt;/xal:ThoroughfareName&gt;
+ * &lt;xal:ThoroughfareNumber&gt;1&lt;/xal:ThoroughfareNumber&gt;
+ * &lt;/xal:Thoroughfare&gt;
+ * &lt;/xal:Locality&gt;
+ * &lt;/xal:Country&gt;
  * &lt;/xal:AddressDetails&gt;
- * </pre>
+</pre> *
  *
- * <p>The following attributes will be extracted from this structure:</p>
+ *
+ * The following attributes will be extracted from this structure:
  *
  * <pre>
  * {
- *   "Country": "My Country",
- *   "Locality": "My City",
- *   "Street": "My Street",
- *   "Number": "1"
+ * "Country": "My Country",
+ * "Locality": "My City",
+ * "Street": "My Street",
+ * "Number": "1"
  * }
- * </pre>
+</pre> *
  *
- * <p>Note that XAL specifies a lot more attributes that are not supported at
- * the moment but will probably be in future versions.</p>
+ *
+ * Note that XAL specifies a lot more attributes that are not supported at
+ * the moment but will probably be in future versions.
  *
  * @author Michel Kraemer
  */
-public class XalAddressIndexer implements XMLIndexer {
-  private static final String NS_XAL = "urn:oasis:names:tc:ciq:xsdschema:xAL:2.0";
+class XalAddressIndexer : XMLIndexer {
 
-  private String currentKey;
-  private Map<String, String> result = new HashMap<>();
+    private var currentKey: String? = null
+    private val result = HashMap<String, String>()
 
-  @Override
-  public void onEvent(XMLStreamEvent event) {
-    int e = event.getEvent();
-    if (e == XMLEvent.START_ELEMENT) {
-      XMLStreamReader reader = event.getXMLReader();
-      if (NS_XAL.equals(reader.getNamespaceURI())) {
-        switch (reader.getLocalName()) {
-          case "CountryName":
-            currentKey = "Country";
-            break;
+    override fun onEvent(event: XMLStreamEvent) {
+        val e = event.event
+        if (e == XMLEvent.START_ELEMENT) {
+            val reader = event.xmlReader
+            if (NS_XAL == reader.namespaceURI) {
+                when (reader.localName) {
+                    "CountryName" -> currentKey = "Country"
 
-          case "LocalityName":
-            currentKey = "Locality";
-            break;
+                    "LocalityName" -> currentKey = "Locality"
 
-          case "ThoroughfareName":
-            currentKey = "Street";
-            break;
+                    "ThoroughfareName" -> currentKey = "Street"
 
-          case "ThoroughfareNumber":
-            currentKey = "Number";
-            break;
+                    "ThoroughfareNumber" -> currentKey = "Number"
+                }
+            }
+        } else if (e == XMLEvent.END_ELEMENT) {
+            currentKey = null
+        } else if (e == XMLEvent.CHARACTERS && currentKey != null) {
+            var value: String? = event.xmlReader.text
+            if (value != null) {
+                value = value.trim { it <= ' ' }
+                if (!value.isEmpty()) {
+                    result[currentKey] = value
+                }
+            }
         }
-      }
-    } else if (e == XMLEvent.END_ELEMENT) {
-      currentKey = null;
-    } else if (e == XMLEvent.CHARACTERS && currentKey != null) {
-      String value = event.getXMLReader().getText();
-      if (value != null) {
-        value = value.trim();
-        if (!value.isEmpty()) {
-          result.put(currentKey, value);
-        }
-      }
     }
-  }
 
-  @Override
-  public Map<String, Object> getResult() {
-    return ImmutableMap.of("address", result);
-  }
+    override fun getResult(): Map<String, Any> {
+        return ImmutableMap.of<String, Any>("address", result)
+    }
+
+    companion object {
+        private val NS_XAL = "urn:oasis:names:tc:ciq:xsdschema:xAL:2.0"
+    }
 }

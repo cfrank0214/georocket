@@ -1,50 +1,44 @@
-package io.georocket.input.xml;
+package io.georocket.input.xml
 
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.events.XMLEvent
 
-import io.georocket.storage.XMLChunkMeta;
-import io.georocket.util.Window;
-import io.georocket.util.XMLStreamEvent;
+import io.georocket.storage.XMLChunkMeta
+import io.georocket.util.Window
+import io.georocket.util.XMLStreamEvent
 
 /**
  * Splits incoming XML tokens whenever a token in the first level (i.e. a
  * child of the XML document's root node) is encountered
  * @author Michel Kraemer
  */
-public class FirstLevelSplitter extends XMLSplitter {
-  private int depth = 0;
-  
-  /**
-   * Create splitter
-   * @param window a buffer for incoming data
-   */
-  public FirstLevelSplitter(Window window) {
-    super(window);
-  }
-  
-  @Override
-  protected Result<XMLChunkMeta> onXMLEvent(XMLStreamEvent event) {
-    Result<XMLChunkMeta> result = null;
-    
-    // create new chunk if we're just after the end of a first-level element
-    if (depth == 1 && isMarked()) {
-      result = makeResult(event.getPos());
+class FirstLevelSplitter
+/**
+ * Create splitter
+ * @param window a buffer for incoming data
+ */
+(window: Window) : XMLSplitter(window) {
+    private var depth = 0
+
+    override fun onXMLEvent(event: XMLStreamEvent): Splitter.Result<XMLChunkMeta>? {
+        var result: Splitter.Result<XMLChunkMeta>? = null
+
+        // create new chunk if we're just after the end of a first-level element
+        if (depth == 1 && isMarked) {
+            result = makeResult(event.pos)
+        }
+
+        when (event.event) {
+            XMLEvent.START_ELEMENT -> {
+                if (depth == 1) {
+                    mark(event.pos)
+                }
+                ++depth
+            }
+            XMLEvent.END_ELEMENT -> --depth
+            else -> {
+            }
+        }
+
+        return result
     }
-    
-    switch (event.getEvent()) {
-    case XMLEvent.START_ELEMENT:
-      if (depth == 1) {
-        mark(event.getPos());
-      }
-      ++depth;
-      break;
-    case XMLEvent.END_ELEMENT:
-      --depth;
-      break;
-    default:
-      break;
-    }
-    
-    return result;
-  }
 }

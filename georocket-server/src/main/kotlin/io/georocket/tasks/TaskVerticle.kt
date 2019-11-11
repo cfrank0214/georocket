@@ -1,163 +1,159 @@
-package io.georocket.tasks;
+package io.georocket.tasks
 
-import io.georocket.constants.AddressConstants;
-import io.georocket.constants.ConfigConstants;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import io.georocket.constants.AddressConstants
+import io.georocket.constants.ConfigConstants
+import io.vertx.core.AbstractVerticle
+import io.vertx.core.eventbus.Message
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TreeSet;
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Comparator
+import java.util.LinkedHashMap
+import java.util.TreeSet
 
 /**
  * A verticle that tracks information about currently running tasks
  * @author Michel Kraemer
  */
-public class TaskVerticle extends AbstractVerticle {
-  private long retainSeconds;
-  private Map<String, Map<Class<? extends Task>, Task>> tasks = new LinkedHashMap<>();
-  private TreeSet<Task> finishedTasks = new TreeSet<>(Comparator.comparing(Task::getEndTime)
-    .thenComparingInt(System::identityHashCode));
+class TaskVerticle : AbstractVerticle() {
+    private var retainSeconds: Long = 0
+    private val tasks = LinkedHashMap<String, Map<Class<out Task>, Task>>()
+    private val finishedTasks = TreeSet(Comparator.comparing<Task, Instant>(Function<Task, Instant> { it.getEndTime() })
+            .thenComparingInt(ToIntFunction<Task> { System.identityHashCode(it) }))
 
-  @Override
-  public void start() {
-    retainSeconds = config().getLong(ConfigConstants.TASKS_RETAIN_SECONDS,
-        ConfigConstants.DEFAULT_TASKS_RETAIN_SECONDS);
+    override fun start() {
+        retainSeconds = config().getLong(ConfigConstants.TASKS_RETAIN_SECONDS,
+                ConfigConstants.DEFAULT_TASKS_RETAIN_SECONDS)!!
 
-    vertx.eventBus().consumer(AddressConstants.TASK_GET_ALL, this::onGetAll);
-    vertx.eventBus().consumer(AddressConstants.TASK_GET_BY_CORRELATION_ID,
-        this::onGetByCorrelationId);
-    vertx.eventBus().consumer(AddressConstants.TASK_INC, this::onInc);
-  }
-
-  /**
-   * Handle a request to get all tasks
-   * @param msg the request
-   */
-  private void onGetAll(Message<Void> msg) {
-    cleanUp();
-    JsonObject result = new JsonObject();
-    tasks.forEach((c, m) -> result.put(c, makeResponse(m)));
-    msg.reply(result);
-  }
-
-  /**
-   * Handle a request to get all tasks of a given correlation ID
-   * @param msg the request
-   */
-  private void onGetByCorrelationId(Message<String> msg) {
-    cleanUp();
-    String correlationId = msg.body();
-    if (correlationId == null) {
-      msg.fail(400, "Correlation ID expected");
-      return;
+        vertx.eventBus().consumer<Void>(AddressConstants.TASK_GET_ALL, Handler<Message<Void>> { this.onGetAll(it) })
+        vertx.eventBus().consumer<String>(AddressConstants.TASK_GET_BY_CORRELATION_ID,
+                Handler<Message<String>> { this.onGetByCorrelationId(it) })
+        vertx.eventBus().consumer<JsonObject>(AddressConstants.TASK_INC, Handler<Message<JsonObject>> { this.onInc(it) })
     }
 
-    Map<Class<? extends Task>, Task> m = tasks.get(correlationId);
-    if (m == null) {
-      msg.fail(404, "Unknown correlation ID");
-      return;
+    /**
+     * Handle a request to get all tasks
+     * @param msg the request
+     */
+    private fun onGetAll(msg: Message<Void>) {
+        cleanUp()
+        val result = JsonObject()
+        tasks.forEach { (c, m) -> result.put(c, makeResponse(m)) }
+        msg.reply(result)
     }
 
-    JsonObject result = new JsonObject();
-    result.put(correlationId, makeResponse(m));
-    msg.reply(result);
-  }
-
-  /**
-   * Make a response containing information about single correlation ID
-   * @param m the information about the correlation ID
-   * @return the response
-   */
-  private JsonArray makeResponse(Map<Class<? extends Task>, Task> m) {
-    JsonArray arr = new JsonArray();
-    m.forEach((cls, t) -> {
-      JsonObject o = JsonObject.mapFrom(t);
-      o.remove("correlationId");
-      arr.add(o);
-    });
-    return arr;
-  }
-
-  /**
-   * Handle a request to increment the values of a task
-   * @param msg the request
-   */
-  private void onInc(Message<JsonObject> msg) {
-    JsonObject body = msg.body();
-    if (body == null) {
-      // ignore
-      return;
-    }
-
-    Task t = body.mapTo(Task.class);
-
-    Map<Class<? extends Task>, Task> m = tasks.computeIfAbsent(
-        t.getCorrelationId(), k -> new LinkedHashMap<>());
-
-    Task existingTask = m.get(t.getClass());
-    if (existingTask != null) {
-      if (existingTask.getEndTime() != null && t.getEndTime() != null) {
-        // End time will be updated. Temporarily remove existing task from finished tasks.
-        finishedTasks.remove(existingTask);
-      }
-      existingTask.inc(t);
-      t = existingTask;
-    } else {
-      m.put(t.getClass(), t);
-    }
-
-    if (t.getEndTime() != null) {
-      finishedTasks.add(t);
-    }
-
-    // help the indexer verticle and finish the indexing task if the importer
-    // task has also finished and the number of indexed chunks equals the
-    // number of imported chunks
-    if (t instanceof IndexingTask || t instanceof ImportingTask) {
-      ImportingTask importingTask = (ImportingTask)m.get(ImportingTask.class);
-      if (importingTask != null && importingTask.getEndTime() != null) {
-        IndexingTask indexingTask = (IndexingTask)m.get(IndexingTask.class);
-        if (indexingTask != null && indexingTask.getEndTime() == null &&
-            indexingTask.getIndexedChunks() == importingTask.getImportedChunks()) {
-          indexingTask.setEndTime(Instant.now());
-          finishedTasks.add(indexingTask);
+    /**
+     * Handle a request to get all tasks of a given correlation ID
+     * @param msg the request
+     */
+    private fun onGetByCorrelationId(msg: Message<String>) {
+        cleanUp()
+        val correlationId = msg.body()
+        if (correlationId == null) {
+            msg.fail(400, "Correlation ID expected")
+            return
         }
-      }
-    }
 
-    // help the indexer verticle and finish the removing task if all chunks
-    // have been removed
-    if (t instanceof RemovingTask && t.getEndTime() == null) {
-      RemovingTask rt = (RemovingTask)t;
-      if (rt.getTotalChunks() == rt.getRemovedChunks()) {
-        rt.setEndTime(Instant.now());
-        finishedTasks.add(rt);
-      }
-    }
-
-    cleanUp();
-  }
-
-  /**
-   * Remove outdated tasks
-   */
-  private void cleanUp() {
-    Instant threshold = Instant.now().minus(retainSeconds, ChronoUnit.SECONDS);
-    while (!finishedTasks.isEmpty() && finishedTasks.first().getEndTime().isBefore(threshold)) {
-      Task t = finishedTasks.pollFirst();
-      Map<Class<? extends Task>, Task> m = tasks.get(t.getCorrelationId());
-      if (m != null) {
-        m.remove(t.getClass());
-        if (m.isEmpty()) {
-          tasks.remove(t.getCorrelationId());
+        val m = tasks[correlationId]
+        if (m == null) {
+            msg.fail(404, "Unknown correlation ID")
+            return
         }
-      }
+
+        val result = JsonObject()
+        result.put(correlationId, makeResponse(m))
+        msg.reply(result)
     }
-  }
+
+    /**
+     * Make a response containing information about single correlation ID
+     * @param m the information about the correlation ID
+     * @return the response
+     */
+    private fun makeResponse(m: Map<Class<out Task>, Task>): JsonArray {
+        val arr = JsonArray()
+        m.forEach { (cls, t) ->
+            val o = JsonObject.mapFrom(t)
+            o.remove("correlationId")
+            arr.add(o)
+        }
+        return arr
+    }
+
+    /**
+     * Handle a request to increment the values of a task
+     * @param msg the request
+     */
+    private fun onInc(msg: Message<JsonObject>) {
+        val body = msg.body()
+                ?: // ignore
+                return
+
+        var t = body.mapTo(Task::class.java)
+
+        val m = (tasks as java.util.Map<String, Map<Class<out Task>, Task>>).computeIfAbsent(
+                t.correlationId) { k -> LinkedHashMap() }
+
+        val existingTask = m[t.javaClass]
+        if (existingTask != null) {
+            if (existingTask.endTime != null && t.endTime != null) {
+                // End time will be updated. Temporarily remove existing task from finished tasks.
+                finishedTasks.remove(existingTask)
+            }
+            existingTask.inc(t)
+            t = existingTask
+        } else {
+            m.put(t.javaClass, t)
+        }
+
+        if (t.endTime != null) {
+            finishedTasks.add(t)
+        }
+
+        // help the indexer verticle and finish the indexing task if the importer
+        // task has also finished and the number of indexed chunks equals the
+        // number of imported chunks
+        if (t is IndexingTask || t is ImportingTask) {
+            val importingTask = m[ImportingTask::class.java] as ImportingTask
+            if (importingTask != null && importingTask.endTime != null) {
+                val indexingTask = m[IndexingTask::class.java] as IndexingTask
+                if (indexingTask != null && indexingTask.endTime == null &&
+                        indexingTask.indexedChunks == importingTask.importedChunks) {
+                    indexingTask.endTime = Instant.now()
+                    finishedTasks.add(indexingTask)
+                }
+            }
+        }
+
+        // help the indexer verticle and finish the removing task if all chunks
+        // have been removed
+        if (t is RemovingTask && t.endTime == null) {
+            val rt = t
+            if (rt.totalChunks == rt.removedChunks) {
+                rt.endTime = Instant.now()
+                finishedTasks.add(rt)
+            }
+        }
+
+        cleanUp()
+    }
+
+    /**
+     * Remove outdated tasks
+     */
+    private fun cleanUp() {
+        val threshold = Instant.now().minus(retainSeconds, ChronoUnit.SECONDS)
+        while (!finishedTasks.isEmpty() && finishedTasks.first().endTime.isBefore(threshold)) {
+            val t = finishedTasks.pollFirst()
+            val m = tasks[t!!.correlationId]
+            if (m != null) {
+                m.remove(t.javaClass)
+                if (m.isEmpty()) {
+                    tasks.remove(t.correlationId)
+                }
+            }
+        }
+    }
 }

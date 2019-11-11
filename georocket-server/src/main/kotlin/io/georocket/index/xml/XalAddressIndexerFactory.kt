@@ -1,78 +1,64 @@
-package io.georocket.index.xml;
+package io.georocket.index.xml
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import io.georocket.query.KeyValueQueryPart;
-import io.georocket.query.KeyValueQueryPart.ComparisonOperator;
-import io.georocket.query.QueryPart;
-import io.georocket.query.StringQueryPart;
-import io.vertx.core.json.JsonObject;
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
+import io.georocket.query.KeyValueQueryPart
+import io.georocket.query.KeyValueQueryPart.ComparisonOperator
+import io.georocket.query.QueryPart
+import io.georocket.query.StringQueryPart
+import io.vertx.core.json.JsonObject
 
-import java.util.Map;
-
-import static io.georocket.query.ElasticsearchQueryHelper.gtQuery;
-import static io.georocket.query.ElasticsearchQueryHelper.gteQuery;
-import static io.georocket.query.ElasticsearchQueryHelper.ltQuery;
-import static io.georocket.query.ElasticsearchQueryHelper.lteQuery;
-import static io.georocket.query.ElasticsearchQueryHelper.multiMatchQuery;
-import static io.georocket.query.ElasticsearchQueryHelper.termQuery;
+import io.georocket.query.ElasticsearchQueryHelper.gtQuery
+import io.georocket.query.ElasticsearchQueryHelper.gteQuery
+import io.georocket.query.ElasticsearchQueryHelper.ltQuery
+import io.georocket.query.ElasticsearchQueryHelper.lteQuery
+import io.georocket.query.ElasticsearchQueryHelper.multiMatchQuery
+import io.georocket.query.ElasticsearchQueryHelper.termQuery
 
 /**
- * Creates instances of {@link XalAddressIndexer}
+ * Creates instances of [XalAddressIndexer]
  * @author Michel Kraemer
  */
-public class XalAddressIndexerFactory implements XMLIndexerFactory {
-  @Override
-  public XMLIndexer createIndexer() {
-    return new XalAddressIndexer();
-  }
+class XalAddressIndexerFactory : XMLIndexerFactory {
+    override fun createIndexer(): XMLIndexer {
+        return XalAddressIndexer()
+    }
 
-  @Override
-  public Map<String, Object> getMapping() {
-    return ImmutableMap.of("dynamic_templates", ImmutableList.of(ImmutableMap.of(
-      "addressFields", ImmutableMap.of(
-        "path_match", "address.*",
-        "mapping", ImmutableMap.of(
-          "type", "keyword"
+    override fun getMapping(): Map<String, Any> {
+        return ImmutableMap.of<String, Any>("dynamic_templates", ImmutableList.of(ImmutableMap.of(
+                "addressFields", ImmutableMap.of(
+                "path_match", "address.*",
+                "mapping", ImmutableMap.of(
+                "type", "keyword"
         )
-      )
-    )));
-  }
-
-  @Override
-  public MatchPriority getQueryPriority(QueryPart queryPart) {
-    if (queryPart instanceof StringQueryPart ||
-      queryPart instanceof KeyValueQueryPart) {
-      return MatchPriority.SHOULD;
+        )
+        )))
     }
-    return MatchPriority.NONE;
-  }
 
-  @Override
-  public JsonObject compileQuery(QueryPart queryPart) {
-    if (queryPart instanceof StringQueryPart) {
-      // match values of all fields regardless of their name
-      String search = ((StringQueryPart)queryPart).getSearchString();
-      return multiMatchQuery(search, "address.*");
-    } else if (queryPart instanceof KeyValueQueryPart) {
-      KeyValueQueryPart kvqp = (KeyValueQueryPart)queryPart;
-      String key = kvqp.getKey();
-      String value = kvqp.getValue();
-      ComparisonOperator comp = kvqp.getComparisonOperator();
-      String name = "address." + key;
-      switch (comp) {
-        case EQ:
-          return termQuery(name, value);
-        case GT:
-          return gtQuery(name, value);
-        case GTE:
-          return gteQuery(name, value);
-        case LT:
-          return ltQuery(name, value);
-        case LTE:
-          return lteQuery(name, value);
-      }
+    override fun getQueryPriority(queryPart: QueryPart): QueryCompiler.MatchPriority {
+        return if (queryPart is StringQueryPart || queryPart is KeyValueQueryPart) {
+            QueryCompiler.MatchPriority.SHOULD
+        } else QueryCompiler.MatchPriority.NONE
     }
-    return null;
-  }
+
+    override fun compileQuery(queryPart: QueryPart): JsonObject? {
+        if (queryPart is StringQueryPart) {
+            // match values of all fields regardless of their name
+            val search = queryPart.searchString
+            return multiMatchQuery(search, "address.*")
+        } else if (queryPart is KeyValueQueryPart) {
+            val key = queryPart.key
+            val value = queryPart.value
+            val comp = queryPart.comparisonOperator
+            val name = "address.$key"
+            when (comp) {
+                KeyValueQueryPart.ComparisonOperator.EQ -> return termQuery(name, value)
+                KeyValueQueryPart.ComparisonOperator.GT -> return gtQuery(name, value)
+                KeyValueQueryPart.ComparisonOperator.GTE -> return gteQuery(name, value)
+                KeyValueQueryPart.ComparisonOperator.LT -> return ltQuery(name, value)
+                KeyValueQueryPart.ComparisonOperator.LTE -> return lteQuery(name, value)
+            }
+        }
+        return null
+    }
 }

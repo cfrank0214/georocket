@@ -44,7 +44,7 @@ public class FileStoreTest extends StorageTest {
   }
 
   private void configureVertx(Vertx vertx) {
-    vertx.getOrCreateContext().config().put(ConfigConstants.STORAGE_FILE_PATH, fileStoreRoot);
+    vertx.getOrCreateContext().config().put(ConfigConstants.INSTANCE.getSTORAGE_FILE_PATH(), fileStoreRoot);
   }
 
   @Override

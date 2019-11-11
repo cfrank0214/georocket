@@ -185,12 +185,12 @@ public class S3StoreTest extends StorageTest {
   private void configureVertx(Vertx vertx) {
     JsonObject config = vertx.getOrCreateContext().config();
 
-    config.put(ConfigConstants.STORAGE_S3_ACCESS_KEY,        S3_ACCESS_KEY);
-    config.put(ConfigConstants.STORAGE_S3_SECRET_KEY,        S3_SECRET_KEY);
-    config.put(ConfigConstants.STORAGE_S3_HOST,              S3_HOST);
-    config.put(ConfigConstants.STORAGE_S3_PORT,              wireMockRule.port());
-    config.put(ConfigConstants.STORAGE_S3_BUCKET,            S3_BUCKET);
-    config.put(ConfigConstants.STORAGE_S3_PATH_STYLE_ACCESS, S3_PATH_STYLE_ACCESS);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_ACCESS_KEY(),        S3_ACCESS_KEY);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_SECRET_KEY(),        S3_SECRET_KEY);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_HOST(),              S3_HOST);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_PORT(),              wireMockRule.port());
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_BUCKET(),            S3_BUCKET);
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_S3_PATH_STYLE_ACCESS(), S3_PATH_STYLE_ACCESS);
   }
 
   @Override

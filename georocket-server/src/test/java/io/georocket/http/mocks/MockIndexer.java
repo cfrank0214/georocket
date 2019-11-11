@@ -62,7 +62,7 @@ public class MockIndexer {
    * @param vertx vertx instance
    */
   public static void mockIndexerQuery(Vertx vertx) {
-    indexerQuerySubscription = vertx.eventBus().<JsonObject>consumer(AddressConstants.INDEXER_QUERY).toObservable()
+    indexerQuerySubscription = vertx.eventBus().<JsonObject>consumer(AddressConstants.INSTANCE.getINDEXER_QUERY()).toObservable()
       .subscribe(msg -> {
         JsonArray hits = new JsonArray();
 

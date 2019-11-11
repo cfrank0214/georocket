@@ -1,87 +1,77 @@
-package io.georocket.storage;
+package io.georocket.storage
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import rx.Observable;
-import rx.Producer;
-import rx.internal.operators.BackpressureUtils;
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
+import rx.Observable
+import rx.Producer
+import rx.internal.operators.BackpressureUtils
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Wraps around {@link AsyncCursor} so it can be used with RxJava
+ * Wraps around [AsyncCursor] so it can be used with RxJava
  * @author Tim Hellhake
  * @param <T> type of the cursor item
+</T> */
+class RxAsyncCursor<T>
+/**
+ * Create a new rx-ified cursor
+ * @param delegate the actual cursor to delegate to
  */
-public class RxAsyncCursor<T> implements AsyncCursor<T> {
-  private final AsyncCursor<T> delegate;
+(
+        /**
+         * @return the actual non-rx-ified cursor
+         */
+        val delegate: AsyncCursor<T>) : AsyncCursor<T> {
 
-  /**
-   * Create a new rx-ified cursor
-   * @param delegate the actual cursor to delegate to
-   */
-  public RxAsyncCursor(AsyncCursor<T> delegate) {
-    this.delegate = delegate;
-  }
+    override fun hasNext(): Boolean {
+        return delegate.hasNext()
+    }
 
-  /**
-   * @return the actual non-rx-ified cursor
-   */
-  public AsyncCursor<T> getDelegate() {
-    return delegate;
-  }
+    override fun next(handler: Handler<AsyncResult<T>>) {
+        delegate.next(handler)
+    }
 
-  @Override
-  public boolean hasNext() {
-    return delegate.hasNext();
-  }
+    /**
+     * Convert this cursor to an observable
+     * @return an observable emitting the items from the cursor
+     */
+    fun toObservable(): Observable<T> {
+        return Observable.unsafeCreate { s ->
+            s.setProducer(object : Producer {
+                private val requested = AtomicLong()
 
-  @Override
-  public void next(Handler<AsyncResult<T>> handler) {
-    delegate.next(handler);
-  }
+                override fun request(n: Long) {
+                    if (n > 0 && !s.isUnsubscribed &&
+                            BackpressureUtils.getAndAddRequest(requested, n) == 0L) {
+                        drain()
+                    }
+                }
 
-  /**
-   * Convert this cursor to an observable
-   * @return an observable emitting the items from the cursor
-   */
-  public Observable<T> toObservable() {
-    return Observable.unsafeCreate(s -> {
-      s.setProducer(new Producer() {
-        private AtomicLong requested = new AtomicLong();
+                private fun drain() {
+                    if (requested.get() > 0) {
+                        if (!hasNext()) {
+                            if (!s.isUnsubscribed) {
+                                s.onCompleted()
+                            }
+                            return
+                        }
 
-        @Override
-        public void request(long n) {
-          if (n > 0 && !s.isUnsubscribed() &&
-            BackpressureUtils.getAndAddRequest(requested, n) == 0) {
-            drain();
-          }
+                        next { ar ->
+                            if (s.isUnsubscribed) {
+                                return@next
+                            }
+                            if (ar.failed()) {
+                                s.onError(ar.cause())
+                            } else {
+                                s.onNext(ar.result())
+                                requested.decrementAndGet()
+                                drain()
+                            }
+                        }
+                    }
+                }
+            })
         }
-
-        private void drain() {
-          if (requested.get() > 0) {
-            if (!hasNext()) {
-              if (!s.isUnsubscribed()) {
-                s.onCompleted();
-              }
-              return;
-            }
-
-            next(ar -> {
-              if (s.isUnsubscribed()) {
-                return;
-              }
-              if (ar.failed()) {
-                s.onError(ar.cause());
-              } else {
-                s.onNext(ar.result());
-                requested.decrementAndGet();
-                drain();
-              }
-            });
-          }
-        }
-      });
-    });
-  }
+    }
 }

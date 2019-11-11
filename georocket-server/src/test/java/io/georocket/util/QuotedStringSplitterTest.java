@@ -17,7 +17,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void noQuotes() {
     assertEquals(Arrays.asList("hello", "world"),
-        QuotedStringSplitter.split("hello world"));
+        QuotedStringSplitter.INSTANCE.split("hello world"));
   }
   
   /**
@@ -26,7 +26,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void manySpaces() {
     assertEquals(Arrays.asList("hello", "world"),
-        QuotedStringSplitter.split("  hello    world "));
+        QuotedStringSplitter.INSTANCE.split("  hello    world "));
   }
   
   /**
@@ -35,7 +35,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void doubleQuotes() {
     assertEquals(Arrays.asList("hello world", "test"),
-        QuotedStringSplitter.split("\"hello world\" test"));
+        QuotedStringSplitter.INSTANCE.split("\"hello world\" test"));
   }
   
   /**
@@ -44,7 +44,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void doubleQuotesWithSpaces() {
     assertEquals(Arrays.asList(" hello   world", "test"),
-        QuotedStringSplitter.split("\" hello   world\" test"));
+        QuotedStringSplitter.INSTANCE.split("\" hello   world\" test"));
   }
   
   /**
@@ -53,7 +53,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void singleQuotes() {
     assertEquals(Arrays.asList("hello world", "test"),
-        QuotedStringSplitter.split("'hello world' test"));
+        QuotedStringSplitter.INSTANCE.split("'hello world' test"));
   }
   
   /**
@@ -62,7 +62,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void singleQuotesWithSpaces() {
     assertEquals(Arrays.asList(" hello   world", "test"),
-        QuotedStringSplitter.split("' hello   world' test"));
+        QuotedStringSplitter.INSTANCE.split("' hello   world' test"));
   }
   
   /**
@@ -71,7 +71,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void singleSingleQuote() {
     assertEquals(Arrays.asList("that's", "cool"),
-        QuotedStringSplitter.split("that's cool"));
+        QuotedStringSplitter.INSTANCE.split("that's cool"));
   }
   
   /**
@@ -80,7 +80,7 @@ public class QuotedStringSplitterTest {
   @Test
   public void mixed() {
     assertEquals(Arrays.asList("'s g'", "s' ", "\"s", "s\""),
-        QuotedStringSplitter.split("\"'s g'\" \"s' \" '\"s' 's\"'"));
+        QuotedStringSplitter.INSTANCE.split("\"'s g'\" \"s' \" '\"s' 's\"'"));
   }
   
   /**
@@ -89,6 +89,6 @@ public class QuotedStringSplitterTest {
   @Test
   public void escaped() {
     assertEquals(Arrays.asList("a'b", "a\"b", "\n"),
-        QuotedStringSplitter.split("'a\\'b' \"a\\\"b\" \\n"));
+        QuotedStringSplitter.INSTANCE.split("'a\\'b' \"a\\\"b\" \\n"));
   }
 }

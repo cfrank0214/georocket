@@ -1,28 +1,23 @@
-package io.georocket.constants;
+package io.georocket.constants
 
 /**
  * Constants for addresses on the event bus
  * @author Michel Kraemer
  */
-@SuppressWarnings("javadoc")
-public final class AddressConstants {
-  public static final String GEOROCKET = "georocket";
-  public static final String IMPORTER_IMPORT = "georocket.importer.import";
-  public static final String IMPORTER_PAUSE = "georocket.importer.pause";
-  public static final String INDEXER_ADD = "georocket.indexer.add";
-  public static final String INDEXER_QUERY = "georocket.indexer.query";
-  public static final String INDEXER_DELETE = "georocket.indexer.delete";
-  public static final String METADATA_GET_ATTRIBUTE_VALUES = "georocket.metadata.attribute.values.get";
-  public static final String METADATA_GET_PROPERTY_VALUES = "georocket.metadata.property.values.get";
-  public static final String METADATA_SET_PROPERTIES = "georocket.metadata.properties.set";
-  public static final String METADATA_REMOVE_PROPERTIES = "georocket.metadata.properties.remove";
-  public static final String METADATA_APPEND_TAGS = "georocket.metadata.tags.append";
-  public static final String METADATA_REMOVE_TAGS = "georocket.metadata.tags.remove";
-  public static final String TASK_GET_ALL = "georocket.task.getAll";
-  public static final String TASK_GET_BY_CORRELATION_ID = "georocket.task.getByCorrelationId";
-  public static final String TASK_INC = "georocket.task.inc";
-
-  private AddressConstants() {
-    // hidden constructor
-  }
-}
+object AddressConstants {
+    val GEOROCKET = "georocket"
+    val IMPORTER_IMPORT = "georocket.importer.import"
+    val IMPORTER_PAUSE = "georocket.importer.pause"
+    val INDEXER_ADD = "georocket.indexer.add"
+    val INDEXER_QUERY = "georocket.indexer.query"
+    val INDEXER_DELETE = "georocket.indexer.delete"
+    val METADATA_GET_ATTRIBUTE_VALUES = "georocket.metadata.attribute.values.get"
+    val METADATA_GET_PROPERTY_VALUES = "georocket.metadata.property.values.get"
+    val METADATA_SET_PROPERTIES = "georocket.metadata.properties.set"
+    val METADATA_REMOVE_PROPERTIES = "georocket.metadata.properties.remove"
+    val METADATA_APPEND_TAGS = "georocket.metadata.tags.append"
+    val METADATA_REMOVE_TAGS = "georocket.metadata.tags.remove"
+    val TASK_GET_ALL = "georocket.task.getAll"
+    val TASK_GET_BY_CORRELATION_ID = "georocket.task.getByCorrelationId"
+    val TASK_INC = "georocket.task.inc"
+}// hidden constructor

@@ -217,7 +217,7 @@ abstract public class StorageTest {
       Vertx vertx, String path, Handler<AsyncResult<Void>> handler);
 
   private void mockIndexerQuery(Vertx vertx, TestContext context, Async async, String path) {
-    vertx.eventBus().<JsonObject>consumer(AddressConstants.INDEXER_QUERY).handler(request -> {
+    vertx.eventBus().<JsonObject>consumer(AddressConstants.INSTANCE.getINDEXER_QUERY()).handler(request -> {
       JsonObject msg = request.body();
 
       context.assertTrue(msg.containsKey("size"));
@@ -309,16 +309,16 @@ abstract public class StorageTest {
     Store store = createStore(vertx);
 
     // register add
-    vertx.eventBus().consumer(AddressConstants.INDEXER_ADD).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_ADD()).handler(h ->
       context.fail("Indexer should not be notified for a add event after "
           + "Store::delete was called!"));
 
     // register delete
-    vertx.eventBus().consumer(AddressConstants.INDEXER_DELETE).handler(r ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_DELETE()).handler(r ->
       context.fail("INDEXER_DELETE should not be notified if no file was found."));
 
     // register query
-    vertx.eventBus().consumer(AddressConstants.INDEXER_QUERY).handler(r -> {
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_QUERY()).handler(r -> {
       r.fail(404, "NOT FOUND");
       asyncIndexerQuery.complete();
     });
@@ -343,12 +343,12 @@ abstract public class StorageTest {
     Store store = createStore(vertx);
 
     // register add
-    vertx.eventBus().consumer(AddressConstants.INDEXER_ADD).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_ADD()).handler(h ->
         context.fail("Indexer should not be notified for a add event after"
             + "Store::delete was called!"));
 
     // register delete
-    vertx.eventBus().<JsonObject>consumer(AddressConstants.INDEXER_DELETE).handler(req -> {
+    vertx.eventBus().<JsonObject>consumer(AddressConstants.INSTANCE.getINDEXER_DELETE()).handler(req -> {
       JsonObject msg = req.body();
       context.assertTrue(msg.containsKey("paths"));
 
@@ -406,7 +406,7 @@ abstract public class StorageTest {
 
     Store store = createStore(vertx);
 
-    vertx.eventBus().<JsonObject>consumer(AddressConstants.INDEXER_ADD).handler(h -> {
+    vertx.eventBus().<JsonObject>consumer(AddressConstants.INSTANCE.getINDEXER_ADD()).handler(h -> {
       JsonObject index = h.body();
 
       context.assertEquals(META.toJsonObject(), index.getJsonObject("meta"));
@@ -418,12 +418,12 @@ abstract public class StorageTest {
     });
 
     // register delete
-    vertx.eventBus().consumer(AddressConstants.INDEXER_DELETE).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_DELETE()).handler(h ->
       context.fail("Indexer should not be notified for a delete event after"
           + "Store::add was called!"));
 
     // register query
-    vertx.eventBus().consumer(AddressConstants.INDEXER_QUERY).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_QUERY()).handler(h ->
       context.fail("Indexer should not be notified for a query event after"
           + "Store::add was called!"));
 
@@ -452,12 +452,12 @@ abstract public class StorageTest {
       Store store = createStore(vertx);
 
       // register add
-      vertx.eventBus().consumer(AddressConstants.INDEXER_ADD).handler(h ->
+      vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_ADD()).handler(h ->
         context.fail("Indexer should not be notified for a add event after"
             + "Store::delete was called!"));
 
       // register delete
-      vertx.eventBus().<JsonObject>consumer(AddressConstants.INDEXER_DELETE).handler(req -> {
+      vertx.eventBus().<JsonObject>consumer(AddressConstants.INSTANCE.getINDEXER_DELETE()).handler(req -> {
         JsonObject msg = req.body();
         context.assertTrue(msg.containsKey("paths"));
 
@@ -498,12 +498,12 @@ abstract public class StorageTest {
     mockIndexerQuery(vertx, context, asyncQuery, path);
 
     // register delete
-    vertx.eventBus().consumer(AddressConstants.INDEXER_DELETE).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_DELETE()).handler(h ->
       context.fail("Indexer should not be notified for a delete event after"
           + "Store::get was called!"));
 
     // register query
-    vertx.eventBus().consumer(AddressConstants.INDEXER_ADD).handler(h ->
+    vertx.eventBus().consumer(AddressConstants.INSTANCE.getINDEXER_ADD()).handler(h ->
       context.fail("Indexer should not be notified for an add event after"
           + "Store::get was called!"));
 

@@ -1,125 +1,116 @@
-package io.georocket.storage.indexed;
+package io.georocket.storage.indexed
 
-import io.georocket.storage.ChunkMeta;
-import io.georocket.storage.CursorInfo;
-import io.georocket.storage.StoreCursor;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.georocket.storage.ChunkMeta
+import io.georocket.storage.CursorInfo
+import io.georocket.storage.StoreCursor
+import io.vertx.core.AsyncResult
+import io.vertx.core.Future
+import io.vertx.core.Handler
+import io.vertx.core.Vertx
 
 /**
- * Implementation of {@link StoreCursor} for indexed chunk stores
+ * Implementation of [StoreCursor] for indexed chunk stores
  * @author Michel Kraemer
  */
-public class IndexedStoreCursor implements StoreCursor {
-  /**
-   * The number of items retrieved in one batch
-   */
-  private static final int SIZE = 100;
+class IndexedStoreCursor
+/**
+ * Create a cursor
+ * @param vertx the Vert.x instance
+ * @param search the search query
+ * @param path the path where to perform the search (may be null if the
+ * whole store should be searched)
+ */
+(
+        /**
+         * The Vert.x instance
+         */
+        private val vertx: Vertx,
+        /**
+         * The search query
+         */
+        private val search: String,
+        /**
+         * The path where to perform the search (may be null)
+         */
+        private val path: String) : StoreCursor {
 
-  /**
-   * The Vert.x instance
-   */
-  private final Vertx vertx;
+    /**
+     * This cursor use FrameCursor to load the full datastore frame by frame.
+     */
+    private var currentFrameCursor: StoreCursor? = null
 
-  /**
-   * The search query
-   */
-  private final String search;
+    /**
+     * The current read position
+     */
+    private var pos = -1
 
-  /**
-   * The path where to perform the search (may be null)
-   */
-  private final String path;
+    /**
+     * The total number of items requested from the store
+     */
+    private var totalHits: Long? = 0L
 
-  /**
-   * This cursor use FrameCursor to load the full datastore frame by frame.
-   */
-  private StoreCursor currentFrameCursor; 
+    /**
+     * The scrollId for elasticsearch
+     */
+    private var scrollId: String? = null
 
-  /**
-   * The current read position
-   */
-  private int pos = -1;
-
-  /**
-   * The total number of items requested from the store
-   */
-  private Long totalHits = 0L;
-
-  /**
-   * The scrollId for elasticsearch
-   */
-  private String scrollId;
-
-  /**
-   * Create a cursor
-   * @param vertx the Vert.x instance
-   * @param search the search query
-   * @param path the path where to perform the search (may be null if the
-   * whole store should be searched)
-   */
-  public IndexedStoreCursor(Vertx vertx, String search, String path) {
-    this.vertx = vertx;
-    this.search = search;
-    this.path = path;
-  }
-
-  /**
-   * Starts this cursor
-   * @param handler will be called when the cursor has retrieved its first batch
-   */
-  public void start(Handler<AsyncResult<StoreCursor>> handler) {
-    new FrameCursor(vertx, search, path, SIZE).start(h -> {
-      if (h.succeeded()) {
-        handleFrameCursor(h.result());
-        handler.handle(Future.succeededFuture(this));
-      } else {
-        handler.handle(Future.failedFuture(h.cause()));
-      }
-    });
-  }
-  
-  private void handleFrameCursor(StoreCursor framedCursor) {
-    currentFrameCursor = framedCursor;
-    CursorInfo info = framedCursor.getInfo();
-    this.totalHits = info.getTotalHits();
-    this.scrollId = info.getScrollId();
-  }
-
-  @Override
-  public boolean hasNext() {
-    return pos + 1 < totalHits;
-  }
-  
-  @Override
-  public void next(Handler<AsyncResult<ChunkMeta>> handler) {
-    ++pos;
-    if (pos >= totalHits) {
-      handler.handle(Future.failedFuture(new IndexOutOfBoundsException(
-          "Cursor is beyond a valid position.")));
-    } else if (this.currentFrameCursor.hasNext()) {
-      this.currentFrameCursor.next(handler);
-    } else {
-      new FrameCursor(vertx, scrollId).start(h -> {
-        if (h.failed()) {
-          handler.handle(Future.failedFuture(h.cause()));
-        } else {
-          handleFrameCursor(h.result());
-          this.currentFrameCursor.next(handler);
+    /**
+     * Starts this cursor
+     * @param handler will be called when the cursor has retrieved its first batch
+     */
+    fun start(handler: Handler<AsyncResult<StoreCursor>>) {
+        FrameCursor(vertx, search, path, SIZE).start { h ->
+            if (h.succeeded()) {
+                handleFrameCursor(h.result())
+                handler.handle(Future.succeededFuture(this))
+            } else {
+                handler.handle(Future.failedFuture(h.cause()))
+            }
         }
-      });
     }
-  }
 
-  @Override
-  public String getChunkPath() {
-    return this.currentFrameCursor.getChunkPath();
-  }
+    private fun handleFrameCursor(framedCursor: StoreCursor) {
+        currentFrameCursor = framedCursor
+        val info = framedCursor.info
+        this.totalHits = info.totalHits
+        this.scrollId = info.scrollId
+    }
 
-  @Override
-  public CursorInfo getInfo() {
-    return this.currentFrameCursor.getInfo();
-  }
+    override fun hasNext(): Boolean {
+        return pos + 1 < totalHits
+    }
+
+    override fun next(handler: Handler<AsyncResult<ChunkMeta>>) {
+        ++pos
+        if (pos >= totalHits) {
+            handler.handle(Future.failedFuture(IndexOutOfBoundsException(
+                    "Cursor is beyond a valid position.")))
+        } else if (this.currentFrameCursor!!.hasNext()) {
+            this.currentFrameCursor!!.next(handler)
+        } else {
+            FrameCursor(vertx, scrollId).start { h ->
+                if (h.failed()) {
+                    handler.handle(Future.failedFuture(h.cause()))
+                } else {
+                    handleFrameCursor(h.result())
+                    this.currentFrameCursor!!.next(handler)
+                }
+            }
+        }
+    }
+
+    override fun getChunkPath(): String {
+        return this.currentFrameCursor!!.chunkPath
+    }
+
+    override fun getInfo(): CursorInfo {
+        return this.currentFrameCursor!!.info
+    }
+
+    companion object {
+        /**
+         * The number of items retrieved in one batch
+         */
+        private val SIZE = 100
+    }
 }

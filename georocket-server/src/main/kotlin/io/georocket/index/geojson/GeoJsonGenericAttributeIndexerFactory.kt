@@ -1,17 +1,15 @@
-package io.georocket.index.geojson;
+package io.georocket.index.geojson
 
-import io.georocket.index.generic.GenericAttributeIndexerFactory;
-import io.georocket.index.xml.JsonIndexer;
-import io.georocket.index.xml.JsonIndexerFactory;
+import io.georocket.index.generic.GenericAttributeIndexerFactory
+import io.georocket.index.xml.JsonIndexer
+import io.georocket.index.xml.JsonIndexerFactory
 
 /**
- * Create instances of {@link GeoJsonGenericAttributeIndexer}
+ * Create instances of [GeoJsonGenericAttributeIndexer]
  * @author Michel Kraemer
  */
-public class GeoJsonGenericAttributeIndexerFactory extends GenericAttributeIndexerFactory
-    implements JsonIndexerFactory {
-  @Override
-  public JsonIndexer createIndexer() {
-    return new GeoJsonGenericAttributeIndexer();
-  }
+class GeoJsonGenericAttributeIndexerFactory : GenericAttributeIndexerFactory(), JsonIndexerFactory {
+    override fun createIndexer(): JsonIndexer {
+        return GeoJsonGenericAttributeIndexer()
+    }
 }

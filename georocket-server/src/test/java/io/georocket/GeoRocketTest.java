@@ -20,7 +20,7 @@ public class GeoRocketTest {
    */
   @Test
   public void testOverwriteWithEnvironmentVariables() {
-    final String PROP_KEY = ConfigConstants.LOG_CONFIG;
+    final String PROP_KEY = ConfigConstants.INSTANCE.getLOG_CONFIG();
     final String ENV_KEY = PROP_KEY
       .replace(".", "_")
       .toUpperCase();
@@ -28,7 +28,7 @@ public class GeoRocketTest {
     JsonObject conf = new JsonObject();
     Map<String, String> env = new HashMap<String, String>();
     env.put(ENV_KEY, VALUE);
-    GeoRocket.overwriteWithEnvironmentVariables(conf, env);
+    GeoRocket.Companion.overwriteWithEnvironmentVariables(conf, env);
     assertEquals(Sets.newHashSet(PROP_KEY), conf.getMap().keySet());
     assertEquals(VALUE, conf.getString(PROP_KEY));
   }

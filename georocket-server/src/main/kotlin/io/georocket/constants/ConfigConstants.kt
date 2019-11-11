@@ -1,129 +1,125 @@
-package io.georocket.constants;
+package io.georocket.constants
 
-import io.georocket.config.ConfigKeysProvider;
-import io.georocket.util.FilteredServiceLoader;
+import io.georocket.config.ConfigKeysProvider
+import io.georocket.util.FilteredServiceLoader
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList
+import java.util.Arrays
+import java.util.stream.Collectors
 
 /**
  * Configuration constants
  * @author Michel Kraemer
  */
-@SuppressWarnings("javadoc")
-public final class ConfigConstants {
-  public static final String HOME = "georocket.home";
-  public static final String HOST = "georocket.host";
-  public static final String PORT = "georocket.port";
+object ConfigConstants {
+    val HOME = "georocket.home"
+    val HOST = "georocket.host"
+    val PORT = "georocket.port"
 
-  public static final String HTTP_COMPRESS = "georocket.http.compress";
-  public static final String HTTP_SSL = "georocket.http.ssl";
-  public static final String HTTP_CERT_PATH = "georocket.http.certPath";
-  public static final String HTTP_KEY_PATH = "georocket.http.keyPath";
-  public static final String HTTP_ALPN = "georocket.http.alpn";
+    val HTTP_COMPRESS = "georocket.http.compress"
+    val HTTP_SSL = "georocket.http.ssl"
+    val HTTP_CERT_PATH = "georocket.http.certPath"
+    val HTTP_KEY_PATH = "georocket.http.keyPath"
+    val HTTP_ALPN = "georocket.http.alpn"
 
-  public static final String HTTP_CORS_ENABLE = "georocket.http.cors.enable";
-  public static final String HTTP_CORS_ALLOW_ORIGIN = "georocket.http.cors.allowOrigin";
-  public static final String HTTP_CORS_ALLOW_CREDENTIALS = "georocket.http.cors.allowCredentials";
-  public static final String HTTP_CORS_ALLOW_HEADERS = "georocket.http.cors.allowHeaders";
-  public static final String HTTP_CORS_ALLOW_METHODS = "georocket.http.cors.allowMethods";
-  public static final String HTTP_CORS_EXPOSE_HEADERS = "georocket.http.cors.exposeHeaders";
-  public static final String HTTP_CORS_MAX_AGE = "georocket.http.cors.maxAge";
+    val HTTP_CORS_ENABLE = "georocket.http.cors.enable"
+    val HTTP_CORS_ALLOW_ORIGIN = "georocket.http.cors.allowOrigin"
+    val HTTP_CORS_ALLOW_CREDENTIALS = "georocket.http.cors.allowCredentials"
+    val HTTP_CORS_ALLOW_HEADERS = "georocket.http.cors.allowHeaders"
+    val HTTP_CORS_ALLOW_METHODS = "georocket.http.cors.allowMethods"
+    val HTTP_CORS_EXPOSE_HEADERS = "georocket.http.cors.exposeHeaders"
+    val HTTP_CORS_MAX_AGE = "georocket.http.cors.maxAge"
 
-  public static final String LOG_CONFIG = "georocket.logConfig";
+    val LOG_CONFIG = "georocket.logConfig"
 
-  public static final String STORAGE_CLASS = "georocket.storage.class";
-  public static final String STORAGE_H2_PATH = "georocket.storage.h2.path";
-  public static final String STORAGE_H2_COMPRESS = "georocket.storage.h2.compress";
-  public static final String STORAGE_H2_MAP_NAME = "georocket.storage.h2.mapName"; // undocumented
-  public static final String STORAGE_FILE_PATH = "georocket.storage.file.path";
-  public static final String STORAGE_HDFS_DEFAULT_FS = "georocket.storage.hdfs.defaultFS";
-  public static final String STORAGE_HDFS_PATH = "georocket.storage.hdfs.path";
-  public static final String STORAGE_MONGODB_CONNECTION_STRING = "georocket.storage.mongodb.connectionString";
-  public static final String STORAGE_MONGODB_DATABASE = "georocket.storage.mongodb.database";
-  public static final String STORAGE_S3_ACCESS_KEY = "georocket.storage.s3.accessKey";
-  public static final String STORAGE_S3_SECRET_KEY = "georocket.storage.s3.secretKey";
-  public static final String STORAGE_S3_HOST = "georocket.storage.s3.host";
-  public static final String STORAGE_S3_PORT = "georocket.storage.s3.port";
-  public static final String STORAGE_S3_BUCKET = "georocket.storage.s3.bucket";
-  public static final String STORAGE_S3_PATH_STYLE_ACCESS = "georocket.storage.s3.pathStyleAccess";
-  public static final String STORAGE_S3_FORCE_SIGNATURE_V2 = "georocket.storage.s3.forceSignatureV2";
-  public static final String STORAGE_S3_REQUEST_EXPIRY_SECONDS = "georocket.storage.s3.requestExpirySeconds";
-  
-  public static final String INDEX_MAX_BULK_SIZE = "georocket.index.maxBulkSize";
-  public static final String INDEX_MAX_PARALLEL_INSERTS = "georocket.index.maxParallelInserts";
-  public static final String INDEX_MAX_QUEUED_CHUNKS = "georocket.index.maxQueuedChunks";
-  public static final String INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE = "georocket.index.indexableChunkCache.maxSize";
-  public static final String INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS = "georocket.index.indexableChunkCache.maxTimeSeconds";
-  public static final String INDEX_ELASTICSEARCH_EMBEDDED = "georocket.index.elasticsearch.embedded";
-  public static final String INDEX_ELASTICSEARCH_HOST = "georocket.index.elasticsearch.host";
-  public static final String INDEX_ELASTICSEARCH_PORT = "georocket.index.elasticsearch.port";
-  public static final String INDEX_ELASTICSEARCH_HOSTS = "georocket.index.elasticsearch.hosts";
-  public static final String INDEX_ELASTICSEARCH_AUTO_UPDATE_HOSTS_INTERVAL_SECONDS = "georocket.index.elasticsearch.autoUpdateHostsIntervalSeconds";
-  public static final String INDEX_ELASTICSEARCH_COMPRESS_REQUEST_BODIES = "georocket.index.elasticsearch.compressRequestBodies";
-  public static final String INDEX_ELASTICSEARCH_JAVA_OPTS = "georocket.index.elasticsearch.javaOpts";
-  public static final String INDEX_ELASTICSEARCH_DOWNLOAD_URL = "georocket.index.elasticsearch.downloadUrl"; // undocumented
-  public static final String INDEX_ELASTICSEARCH_INSTALL_PATH = "georocket.index.elasticsearch.installPath"; // undocumented
-  public static final String INDEX_SPATIAL_PRECISION = "georocket.index.spatial.precision";
+    val STORAGE_CLASS = "georocket.storage.class"
+    val STORAGE_H2_PATH = "georocket.storage.h2.path"
+    val STORAGE_H2_COMPRESS = "georocket.storage.h2.compress"
+    val STORAGE_H2_MAP_NAME = "georocket.storage.h2.mapName" // undocumented
+    val STORAGE_FILE_PATH = "georocket.storage.file.path"
+    val STORAGE_HDFS_DEFAULT_FS = "georocket.storage.hdfs.defaultFS"
+    val STORAGE_HDFS_PATH = "georocket.storage.hdfs.path"
+    val STORAGE_MONGODB_CONNECTION_STRING = "georocket.storage.mongodb.connectionString"
+    val STORAGE_MONGODB_DATABASE = "georocket.storage.mongodb.database"
+    val STORAGE_S3_ACCESS_KEY = "georocket.storage.s3.accessKey"
+    val STORAGE_S3_SECRET_KEY = "georocket.storage.s3.secretKey"
+    val STORAGE_S3_HOST = "georocket.storage.s3.host"
+    val STORAGE_S3_PORT = "georocket.storage.s3.port"
+    val STORAGE_S3_BUCKET = "georocket.storage.s3.bucket"
+    val STORAGE_S3_PATH_STYLE_ACCESS = "georocket.storage.s3.pathStyleAccess"
+    val STORAGE_S3_FORCE_SIGNATURE_V2 = "georocket.storage.s3.forceSignatureV2"
+    val STORAGE_S3_REQUEST_EXPIRY_SECONDS = "georocket.storage.s3.requestExpirySeconds"
 
-  public static final String QUERY_COMPILER_CLASS = "georocket.query.defaultQueryCompiler"; // undocumented
-  public static final String QUERY_DEFAULT_CRS = "georocket.query.defaultCRS";
+    val INDEX_MAX_BULK_SIZE = "georocket.index.maxBulkSize"
+    val INDEX_MAX_PARALLEL_INSERTS = "georocket.index.maxParallelInserts"
+    val INDEX_MAX_QUEUED_CHUNKS = "georocket.index.maxQueuedChunks"
+    val INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE = "georocket.index.indexableChunkCache.maxSize"
+    val INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS = "georocket.index.indexableChunkCache.maxTimeSeconds"
+    val INDEX_ELASTICSEARCH_EMBEDDED = "georocket.index.elasticsearch.embedded"
+    val INDEX_ELASTICSEARCH_HOST = "georocket.index.elasticsearch.host"
+    val INDEX_ELASTICSEARCH_PORT = "georocket.index.elasticsearch.port"
+    val INDEX_ELASTICSEARCH_HOSTS = "georocket.index.elasticsearch.hosts"
+    val INDEX_ELASTICSEARCH_AUTO_UPDATE_HOSTS_INTERVAL_SECONDS = "georocket.index.elasticsearch.autoUpdateHostsIntervalSeconds"
+    val INDEX_ELASTICSEARCH_COMPRESS_REQUEST_BODIES = "georocket.index.elasticsearch.compressRequestBodies"
+    val INDEX_ELASTICSEARCH_JAVA_OPTS = "georocket.index.elasticsearch.javaOpts"
+    val INDEX_ELASTICSEARCH_DOWNLOAD_URL = "georocket.index.elasticsearch.downloadUrl" // undocumented
+    val INDEX_ELASTICSEARCH_INSTALL_PATH = "georocket.index.elasticsearch.installPath" // undocumented
+    val INDEX_SPATIAL_PRECISION = "georocket.index.spatial.precision"
 
-  public static final String TASKS_RETAIN_SECONDS = "georocket.tasks.retainSeconds";
+    val QUERY_COMPILER_CLASS = "georocket.query.defaultQueryCompiler" // undocumented
+    val QUERY_DEFAULT_CRS = "georocket.query.defaultCRS"
 
-  public static final String DEFAULT_HOST = "127.0.0.1";
-  public static final int DEFAULT_PORT = 63020;
+    val TASKS_RETAIN_SECONDS = "georocket.tasks.retainSeconds"
 
-  public static final int DEFAULT_INDEX_MAX_BULK_SIZE = 200;
-  public static final int DEFAULT_INDEX_MAX_PARALLEL_INSERTS = 5;
-  public static final int DEFAULT_INDEX_MAX_QUEUED_CHUNKS = 10000;
-  public static final long DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE = 1024L * 1024 * 64; // 64 MB
-  public static final long DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS = 60;
+    val DEFAULT_HOST = "127.0.0.1"
+    val DEFAULT_PORT = 63020
 
-  public static final long DEFAULT_TASKS_RETAIN_SECONDS = 60 * 2;
+    val DEFAULT_INDEX_MAX_BULK_SIZE = 200
+    val DEFAULT_INDEX_MAX_PARALLEL_INSERTS = 5
+    val DEFAULT_INDEX_MAX_QUEUED_CHUNKS = 10000
+    val DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_SIZE = 1024L * 1024 * 64 // 64 MB
+    val DEFAULT_INDEX_INDEXABLE_CHUNK_CACHE_MAX_TIME_SECONDS: Long = 60
 
-  private ConfigConstants() {
-    // hidden constructor
-  }
+    val DEFAULT_TASKS_RETAIN_SECONDS = (60 * 2).toLong()
 
-  /**
-   * Get all configuration keys from this class and all extensions registered
-   * through the Service Provider Interface API.
-   * @see ConfigKeysProvider
-   * @return the list of configuration keys
-   */
-  public static List<String> getConfigKeys() {
-    List<String> r = getConfigKeys(ConfigConstants.class);
+    /**
+     * Get all configuration keys from this class and all extensions registered
+     * through the Service Provider Interface API.
+     * @see ConfigKeysProvider
+     *
+     * @return the list of configuration keys
+     */
+    val configKeys: List<String>
+        get() {
+            val r = getConfigKeys(ConfigConstants::class.java)
 
-    FilteredServiceLoader<ConfigKeysProvider> loader =
-        FilteredServiceLoader.load(ConfigKeysProvider.class);
-    for (ConfigKeysProvider ccp : loader) {
-      r.addAll(ccp.getConfigKeys());
-    }
+            val loader = FilteredServiceLoader.load(ConfigKeysProvider::class.java)
+            for (ccp in loader) {
+                r.addAll(ccp.configKeys)
+            }
 
-    return r;
-  }
-
-  /**
-   * Get all configuration keys by enumerating over all string constants beginning
-   * with the prefix {@code georocket} from a given class
-   * @param cls the class to inspect
-   * @return the list of configuration keys
-   */
-  public static List<String> getConfigKeys(Class<?> cls) {
-    return Arrays.stream(cls.getFields())
-      .map(f -> {
-        try {
-          return f.get(null);
-        } catch (IllegalAccessException e) {
-          throw new RuntimeException("Could not access config constant", e);
+            return r
         }
-      })
-      .filter(s -> s instanceof String)
-      .map(String.class::cast)
-      .filter(s -> s.startsWith("georocket"))
-      .collect(Collectors.toCollection(ArrayList::new));
-  }
-}
+
+    /**
+     * Get all configuration keys by enumerating over all string constants beginning
+     * with the prefix `georocket` from a given class
+     * @param cls the class to inspect
+     * @return the list of configuration keys
+     */
+    fun getConfigKeys(cls: Class<*>): MutableList<String> {
+        return Arrays.stream<Field>(cls.fields)
+                .map<Any> { f ->
+                    try {
+                        return@Arrays.stream(cls.fields)
+                                .map f . get null
+                    } catch (e: IllegalAccessException) {
+                        throw RuntimeException("Could not access config constant", e)
+                    }
+                }
+                .filter { s -> s is String }
+                .map<String>(Function<Any, String> { String::class.java.cast(it) })
+                .filter { s -> s.startsWith("georocket") }
+                .collect<ArrayList<String>, Any>(Collectors.toCollection(Supplier<ArrayList<String>> { ArrayList() }))
+    }
+}// hidden constructor

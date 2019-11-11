@@ -238,16 +238,16 @@ public class StoreEndpointTest {
    */
   private static HttpClient createHttpClient() {
     HttpClientOptions options = new HttpClientOptions()
-        .setDefaultHost(vertx.getOrCreateContext().config().getString(ConfigConstants.HOST))
-        .setDefaultPort(vertx.getOrCreateContext().config().getInteger(ConfigConstants.PORT))
+        .setDefaultHost(vertx.getOrCreateContext().config().getString(ConfigConstants.INSTANCE.getHOST()))
+        .setDefaultPort(vertx.getOrCreateContext().config().getInteger(ConfigConstants.INSTANCE.getPORT()))
         .setSsl(false);
     return vertxCore.createHttpClient(options);
   }
 
   private static Observable<HttpServer> setupMockEndpoint() {
     JsonObject config = vertx.getOrCreateContext().config();
-    String host = config.getString(ConfigConstants.HOST, ConfigConstants.DEFAULT_HOST);
-    int port = config.getInteger(ConfigConstants.PORT, ConfigConstants.DEFAULT_PORT);
+    String host = config.getString(ConfigConstants.INSTANCE.getHOST(), ConfigConstants.INSTANCE.getDEFAULT_HOST());
+    int port = config.getInteger(ConfigConstants.INSTANCE.getPORT(), ConfigConstants.INSTANCE.getDEFAULT_PORT());
 
     HttpServerOptions serverOptions = new HttpServerOptions().setCompressionSupported(true);
     HttpServer server = vertxCore.createHttpServer(serverOptions);
@@ -259,9 +259,9 @@ public class StoreEndpointTest {
 
   private static void setConfig(JsonObject config) {
     // Use mock store
-    config.put(ConfigConstants.STORAGE_CLASS, "io.georocket.http.mocks.MockStore");
-    config.put(ConfigConstants.HOST, ConfigConstants.DEFAULT_HOST);
-    config.put(ConfigConstants.PORT, NetUtils.findPort());
+    config.put(ConfigConstants.INSTANCE.getSTORAGE_CLASS(), "io.georocket.http.mocks.MockStore");
+    config.put(ConfigConstants.INSTANCE.getHOST(), ConfigConstants.INSTANCE.getDEFAULT_HOST());
+    config.put(ConfigConstants.INSTANCE.getPORT(), NetUtils.findPort());
   }
 
   private final class HeaderConstants {

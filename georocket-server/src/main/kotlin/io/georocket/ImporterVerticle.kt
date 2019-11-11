@@ -7,18 +7,10 @@ import io.georocket.input.Splitter.Result
 import io.georocket.input.geojson.GeoJsonSplitter
 import io.georocket.input.xml.FirstLevelSplitter
 import io.georocket.input.xml.XMLSplitter
-import io.georocket.storage.ChunkMeta
-import io.georocket.storage.IndexMeta
-import io.georocket.storage.RxStore
-import io.georocket.storage.StoreFactory
+import io.georocket.storage.*
 import io.georocket.tasks.ImportingTask
 import io.georocket.tasks.TaskError
-import io.georocket.util.JsonParserTransformer
-import io.georocket.util.RxUtils
-import io.georocket.util.StringWindow
-import io.georocket.util.UTF8BomFilter
-import io.georocket.util.Window
-import io.georocket.util.XMLParserTransformer
+import io.georocket.util.*
 import io.georocket.util.io.RxGzipReadStream
 import io.vertx.core.file.OpenOptions
 import io.vertx.core.impl.NoStackTraceThrowable
@@ -44,6 +36,7 @@ import java.util.stream.Collectors
 import java.util.stream.Stream
 
 import io.georocket.util.MimeTypeUtils.belongsTo
+import io.vertx.core.Handler
 
 /**
  * Imports file in the background
@@ -51,7 +44,7 @@ import io.georocket.util.MimeTypeUtils.belongsTo
  */
 class ImporterVerticle : AbstractVerticle() {
 
-    protected var store: RxStore
+    protected var store: RxStore = null
     private var incoming: String? = null
     private var paused: Boolean = false
     private val filesBeingImported = HashSet<AsyncFile>()

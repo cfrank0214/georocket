@@ -109,7 +109,7 @@ class LoadBalancingHttpClient
      * Get the next available HTTP client
      * @return the client
      */
-    private fun nextClient(): HttpClient {
+    private fun nextClient(): HttpClient? {
         currentHost = (currentHost + 1) % hosts.size
         val u = hosts[currentHost]
         return hostsToClients[u]

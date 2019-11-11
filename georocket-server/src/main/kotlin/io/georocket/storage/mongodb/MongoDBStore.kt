@@ -6,15 +6,15 @@ import java.util.Queue
 import org.bson.Document
 
 import com.google.common.base.Preconditions
-import com.mongodb.async.client.MongoClient
-import com.mongodb.async.client.MongoClients
-import com.mongodb.async.client.MongoDatabase
-import com.mongodb.async.client.gridfs.AsyncInputStream
-import com.mongodb.async.client.gridfs.GridFSBucket
-import com.mongodb.async.client.gridfs.GridFSBuckets
-import com.mongodb.async.client.gridfs.GridFSDownloadStream
-import com.mongodb.async.client.gridfs.GridFSFindIterable
-import com.mongodb.async.client.gridfs.helpers.AsyncStreamHelper
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.gridfs.AsyncInputStream
+import com.mongodb.client.gridfs.GridFSBucket
+import com.mongodb.client.gridfs.GridFSBuckets
+import com.mongodb.client.gridfs.GridFSDownloadStream
+import com.mongodb.client.gridfs.GridFSFindIterable
+import com.mongodb.client.gridfs.helpers.AsyncStreamHelper
 
 import io.georocket.constants.ConfigConstants
 import io.georocket.storage.ChunkReadStream
@@ -49,7 +49,7 @@ class MongoDBStore
      * Get or create the MongoDB database
      * @return the MongoDB client
      */
-    private val db: MongoDatabase
+    private val db: MongoDatabase?
         get() {
             if (database == null) {
                 database = getMongoClient().getDatabase(databaseName)
@@ -61,7 +61,7 @@ class MongoDBStore
      * Get or create the MongoDB GridFS instance
      * @return the MongoDB client
      */
-    private val gridFS: GridFSBucket
+    private val gridFS: GridFSBucket?
         get() {
             if (gridfs == null) {
                 gridfs = GridFSBuckets.create(db)

@@ -7,6 +7,7 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 
 import io.georocket.http.Endpoint.fail
+import io.vertx.core.Handler
 
 /**
  * An HTTP endpoint for accessing the information about tasks maintained by

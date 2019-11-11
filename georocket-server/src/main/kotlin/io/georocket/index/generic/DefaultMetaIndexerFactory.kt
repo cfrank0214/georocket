@@ -9,10 +9,7 @@ import com.google.common.collect.ImmutableMap
 
 import io.georocket.index.xml.MetaIndexer
 import io.georocket.index.xml.MetaIndexerFactory
-import io.georocket.query.ElasticsearchQueryHelper
-import io.georocket.query.KeyValueQueryPart
-import io.georocket.query.QueryPart
-import io.georocket.query.StringQueryPart
+import io.georocket.query.*
 import io.georocket.query.KeyValueQueryPart.ComparisonOperator
 import io.vertx.core.json.JsonObject
 

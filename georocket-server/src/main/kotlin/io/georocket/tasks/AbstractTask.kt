@@ -2,6 +2,7 @@ package io.georocket.tasks
 
 import java.time.Instant
 import java.util.ArrayList
+import java.util.function.Consumer
 
 /**
  * Abstract base class for tasks
@@ -13,7 +14,7 @@ abstract class AbstractTask : Task {
      * Package-visible setter for the task's correlation ID
      * @param correlationId the correlation ID
      */
-    override var correlationId: String? = null
+    override var correlationId: String = ""
         internal set
     /**
      * Set the task's start time

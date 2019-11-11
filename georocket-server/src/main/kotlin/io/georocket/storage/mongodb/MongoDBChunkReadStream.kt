@@ -2,7 +2,7 @@ package io.georocket.storage.mongodb
 
 import java.nio.ByteBuffer
 
-import com.mongodb.async.client.gridfs.AsyncInputStream
+import com.mongodb.client.gridfs.GridFSDownloadStream
 
 import io.georocket.storage.ChunkReadStream
 import io.vertx.core.AsyncResult
@@ -10,7 +10,6 @@ import io.vertx.core.Context
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.core.streams.ReadStream
 
@@ -32,7 +31,7 @@ class MongoDBChunkReadStream
         /**
          * The input stream containing the chunk
          */
-        private val `is`: AsyncInputStream,
+        private val `is`: GridFSDownloadStream,
         /**
          * The chunk's size
          */
@@ -117,7 +116,7 @@ class MongoDBChunkReadStream
     }
 
     private fun doRead(writeBuff: Buffer, buff: ByteBuffer,
-                       handler: Handler<AsyncResult<Buffer>>) {
+                       handler: (Any) -> Unit) {
         `is`.read(buff) { bytesRead, t ->
             if (t != null) {
                 context.runOnContext { v -> handler.handle(Future.failedFuture(t)) }
@@ -214,7 +213,7 @@ class MongoDBChunkReadStream
         return this
     }
 
-    override fun close(handler: Handler<AsyncResult<Void>>?) {
+    override fun close(handler: Handler<GridFSDownloadStream<Void>>?) {
         check()
         closed = true
         `is`.close { r, t ->

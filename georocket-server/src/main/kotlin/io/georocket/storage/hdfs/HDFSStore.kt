@@ -30,7 +30,7 @@ import io.vertx.core.json.JsonObject
  * Stores chunks on HDFS
  * @author Michel Kraemer
  */
-class HDFSStore
+abstract class HDFSStore
 /**
  * Constructs a new store
  * @param vertx the Vert.x instance
@@ -65,7 +65,7 @@ class HDFSStore
      */
     @Synchronized
     @Throws(IOException::class)
-    private fun getFS(): FileSystem {
+    private fun getFS(): FileSystem? {
         if (fs == null) {
             fs = FileSystem.get(configuration)
         }
@@ -80,7 +80,7 @@ class HDFSStore
                 val `is`: FSDataInputStream
                 synchronized(this@HDFSStore) {
                     val fs = getFS()
-                    val status = fs.getFileStatus(p)
+                    val status = fs?.getFileStatus(p)
                     size = status.len
                     `is` = fs.open(p)
                 }

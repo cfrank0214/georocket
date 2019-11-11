@@ -1,12 +1,9 @@
 package io.georocket.index.xml
 
 import com.google.common.collect.ImmutableMap
+import io.georocket.query.*
 
-import io.georocket.query.ElasticsearchQueryHelper
-import io.georocket.query.KeyValueQueryPart
 import io.georocket.query.KeyValueQueryPart.ComparisonOperator
-import io.georocket.query.QueryPart
-import io.georocket.query.StringQueryPart
 import io.vertx.core.json.JsonObject
 
 /**

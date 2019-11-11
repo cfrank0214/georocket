@@ -28,7 +28,7 @@ interface Task {
      * yet started executing the task)
      */
     @get:JsonDeserialize(using = InstantDeserializer::class)
-    val startTime: Instant
+    val startTime: Instant?
 
     /**
      * Get the time when GeoRocket has finished executing the task. Note that
@@ -38,7 +38,7 @@ interface Task {
      * finished the task yet or if the task's end cannot be decided)
      */
     @get:JsonDeserialize(using = InstantDeserializer::class)
-    val endTime: Instant
+    val endTime: Instant?
 
     /**
      * Get the errors that occurred during the execution of the task

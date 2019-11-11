@@ -3,21 +3,17 @@ package io.georocket.http
 import io.georocket.NetUtils
 import io.georocket.constants.ConfigConstants
 import io.georocket.http.mocks.MockIndexer
-import io.vertx.core.Handler
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClient
 import io.vertx.core.http.HttpClientOptions
-import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpClientResponse
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.unit.Async
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
 import io.vertx.ext.web.Router
-import io.vertx.rx.java.ObservableFuture
 import io.vertx.rx.java.RxHelper
 import io.vertx.rxjava.core.Vertx
 import org.junit.After
@@ -54,14 +50,14 @@ class StoreEndpointTest {
         val async = context.async()
         MockIndexer.mockIndexerQuery(vertx!!)
 
-        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&size=100", true, true, { response ->
+        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&size=100", true, true) { response ->
             val si = MockIndexer.FIRST_RETURNED_SCROLL_ID + ":" + MockIndexer.FIRST_RETURNED_SCROLL_ID
             context.assertEquals(si, response.getHeader(HeaderConstants.SCROLL_ID))
-            checkGeoJsonResponse(response, context, { returned ->
+            checkGeoJsonResponse(response, context) { returned ->
                 checkGeoJsonSize(context, response, returned, MockIndexer.HITS_PER_PAGE, true, "The size of the returned elements on the first page should be the page size.")
                 async.complete()
-            })
-        })
+            }
+        }
     }
 
     /**
@@ -73,14 +69,14 @@ class StoreEndpointTest {
         val async = context.async()
         MockIndexer.mockIndexerQuery(vertx!!)
         val si = MockIndexer.FIRST_RETURNED_SCROLL_ID + ":" + MockIndexer.FIRST_RETURNED_SCROLL_ID
-        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&scrollId=$si", true, true, { response ->
+        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&scrollId=$si", true, true) { response ->
             val isi = MockIndexer.INVALID_SCROLLID + ":" + MockIndexer.INVALID_SCROLLID
             context.assertEquals(isi, response.getHeader(HeaderConstants.SCROLL_ID), "The second scrollId should be invalid if there a no elements left.")
-            checkGeoJsonResponse(response, context, { returned ->
+            checkGeoJsonResponse(response, context) { returned ->
                 checkGeoJsonSize(context, response, returned, MockIndexer.TOTAL_HITS!! - MockIndexer.HITS_PER_PAGE!!, true, "The size of the returned elements on the second page should be (TOTAL_HITS - HITS_PER_PAGE)")
                 async.complete()
-            })
-        })
+            }
+        }
     }
 
     /**
@@ -92,7 +88,7 @@ class StoreEndpointTest {
         val async = context.async()
         MockIndexer.mockIndexerQuery(vertx!!)
 
-        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&scrollId=" + MockIndexer.INVALID_SCROLLID, false, false, { response ->
+        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=true&scrollId=" + MockIndexer.INVALID_SCROLLID, checkHeaders = false, checkScrollIdHeaderPresent = false, handler = { response ->
             context.assertEquals(404, response.statusCode(), "Giving an invalid scrollId should return 404.")
             async.complete()
         })
@@ -106,12 +102,12 @@ class StoreEndpointTest {
     fun testNormalGet(context: TestContext) {
         val async = context.async()
         MockIndexer.mockIndexerQuery(vertx!!)
-        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=false", false, false, { response ->
-            checkGeoJsonResponse(response, context, { returned ->
+        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY&scroll=false", false, checkScrollIdHeaderPresent = false) { response ->
+            checkGeoJsonResponse(response, context) { returned ->
                 checkGeoJsonSize(context, response, returned, MockIndexer.TOTAL_HITS, false, "The size of the returned elements on a normal query should be TOTAL_HITS")
                 async.complete()
-            })
-        })
+            }
+        }
     }
 
     /**
@@ -122,12 +118,12 @@ class StoreEndpointTest {
     fun testNormalGetWithoutScrollParameterGiven(context: TestContext) {
         val async = context.async()
         MockIndexer.mockIndexerQuery(vertx!!)
-        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY", false, false, { response ->
-            checkGeoJsonResponse(response, context, { returned ->
+        doScrolledStorepointRequest(context, "/?search=DUMMY_QUERY", false, false) { response ->
+            checkGeoJsonResponse(response, context) { returned ->
                 checkGeoJsonSize(context, response, returned, MockIndexer.TOTAL_HITS, false, "The size of the returned elements on a normal query should be TOTAL_HITS")
                 async.complete()
-            })
-        })
+            }
+        }
     }
 
     private fun checkGeoJsonSize(context: TestContext, response: HttpClientResponse, returned: JsonObject, expectedSize: Long?, checkScrollHeaders: Boolean, msg: String?) {
@@ -139,7 +135,7 @@ class StoreEndpointTest {
         }
     }
 
-    private fun checkGeoJsonResponse(response: HttpClientResponse, context: TestContext, handler: Handler<JsonObject>) {
+    private fun checkGeoJsonResponse(response: HttpClientResponse, context: TestContext, handler: (Any) -> Unit) {
         response.bodyHandler { body ->
             val returned = body.toJsonObject()
             context.assertNotNull(returned)
@@ -179,7 +175,7 @@ class StoreEndpointTest {
      * @param handler response handler
      */
     private fun doScrolledStorepointRequest(context: TestContext, url: String, checkHeaders: Boolean?,
-                                            checkScrollIdHeaderPresent: Boolean?, handler: Handler<HttpClientResponse>) {
+                                            checkScrollIdHeaderPresent: Boolean?, handler: (Any) -> Unit) {
         val client = createHttpClient()
         val request = client.get(url) { response ->
             if (checkHeaders!!) {

@@ -2,9 +2,11 @@ package io.georocket.constants
 
 import io.georocket.config.ConfigKeysProvider
 import io.georocket.util.FilteredServiceLoader
+import java.lang.reflect.Field
 
 import java.util.ArrayList
 import java.util.Arrays
+import java.util.function.Supplier
 import java.util.stream.Collectors
 
 /**
@@ -109,7 +111,7 @@ object ConfigConstants {
      */
     fun getConfigKeys(cls: Class<*>): MutableList<String> {
         return Arrays.stream<Field>(cls.fields)
-                .map<Any> { f ->
+                .map<Any> Arrays@{ f ->
                     try {
                         return@Arrays.stream(cls.fields)
                                 .map f . get null

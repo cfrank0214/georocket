@@ -34,7 +34,7 @@ class MockStore
     }
 
     override fun doAddChunk(chunk: String, path: String, correlationId: String,
-                            handler: Handler<AsyncResult<String>>) {
+                            handler: (Any) -> Unit) {
         notImplemented(handler)
     }
 

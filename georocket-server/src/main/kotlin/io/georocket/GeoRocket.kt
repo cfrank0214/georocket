@@ -11,11 +11,13 @@ import io.georocket.util.SizeFormat
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
+import io.vertx.core.Handler
 import io.vertx.core.Verticle
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.http.HttpServerRequest
 import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -274,7 +276,7 @@ class GeoRocket : AbstractVerticle() {
     companion object {
         private val log = LoggerFactory.getLogger(GeoRocket::class.java)
 
-        protected var geoRocketHome: File
+        protected var geoRocketHome: File = null
 
         /**
          * Replace configuration variables in a string

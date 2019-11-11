@@ -13,7 +13,9 @@ import org.jooq.lambda.tuple.Tuple2
 import org.junit.Test
 
 import io.georocket.storage.GeoJsonChunkMeta
+import io.georocket.storage.JsonChunkMeta
 import io.georocket.util.JsonParserTransformer
+import io.georocket.util.JsonStreamEvent
 import io.georocket.util.StringWindow
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject

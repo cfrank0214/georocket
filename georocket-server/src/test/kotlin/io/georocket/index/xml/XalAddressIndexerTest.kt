@@ -2,6 +2,7 @@ package io.georocket.index.xml
 
 import com.google.common.collect.ImmutableMap
 import io.georocket.util.XMLParserTransformer
+import io.georocket.util.XMLStreamEvent
 import io.vertx.core.buffer.Buffer
 import io.vertx.ext.unit.Async
 import io.vertx.ext.unit.TestContext

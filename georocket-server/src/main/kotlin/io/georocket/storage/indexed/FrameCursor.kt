@@ -13,7 +13,6 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 
 /**
@@ -47,19 +46,19 @@ class FrameCursor
     /**
      * The search query
      */
-    private val search: String
+    private var search: String = ""
 
     /**
      * The path where to perform the search (may be null)
      */
-    private val path: String?
+    private var path: String? = null
 
     /**
      * The size of elements to load in the frame.
      *
      * INV: `size == metas.length`
      */
-    private val size: Int
+    private var size: Int = 0
 
     /**
      * The total number of items the store has to offer.
@@ -97,7 +96,7 @@ class FrameCursor
      * Starts this cursor
      * @param handler will be called when the cursor has retrieved its first batch
      */
-    fun start(handler: Handler<AsyncResult<StoreCursor>>) {
+    fun start(handler: (Any) -> Unit) {
         val queryMsg = JsonObject()
 
         if (scrollId != null) {

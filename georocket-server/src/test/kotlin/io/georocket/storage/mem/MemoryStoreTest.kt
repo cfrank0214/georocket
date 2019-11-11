@@ -8,7 +8,6 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
-import io.vertx.core.shareddata.AsyncMap
 import io.vertx.ext.unit.TestContext
 
 /**
@@ -21,14 +20,14 @@ class MemoryStoreTest : StorageTest() {
     }
 
     private fun getAsyncMap(vertx: Vertx,
-                            handler: Handler<AsyncResult<AsyncMap<String, Buffer>>>) {
+                            handler: (Any) -> Unit) {
         val name = MemoryStore::class.java.name + ".STORE"
         vertx.sharedData().getAsyncMap(name, handler)
     }
 
     override fun prepareData(context: TestContext, vertx: Vertx, path: String?,
                              handler: Handler<AsyncResult<String>>) {
-        getAsyncMap(vertx, { ar ->
+        getAsyncMap(vertx) { ar ->
             if (ar.failed()) {
                 handler.handle(Future.failedFuture<String>(ar.cause()))
                 return@getAsyncMap
@@ -42,12 +41,12 @@ class MemoryStoreTest : StorageTest() {
                     handler.handle(Future.succeededFuture(p))
                 }
             })
-        })
+        }
     }
 
     private fun assertSize(context: TestContext, vertx: Vertx, expectedSize: Int,
                            handler: Handler<AsyncResult<Void>>) {
-        getAsyncMap(vertx, { ar ->
+        getAsyncMap(vertx) { ar ->
             if (ar.failed()) {
                 handler.handle(Future.failedFuture<Void>(ar.cause()))
                 return@getAsyncMap
@@ -61,7 +60,7 @@ class MemoryStoreTest : StorageTest() {
                     handler.handle(Future.succeededFuture())
                 }
             })
-        })
+        }
     }
 
     override fun validateAfterStoreAdd(context: TestContext,

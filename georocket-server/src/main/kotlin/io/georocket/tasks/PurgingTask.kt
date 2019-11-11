@@ -36,7 +36,7 @@ class PurgingTask : AbstractTask {
      * Default constructor
      * @param correlationId the correlation ID this task belongs to
      */
-    constructor(correlationId: String) : super(correlationId) {}
+    constructor(correlationId: String?) : super(correlationId.toString()) {}
 
     override fun inc(other: Task) {
         require(other is PurgingTask) { "Illegal task type" }

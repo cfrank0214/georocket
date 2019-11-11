@@ -1,6 +1,7 @@
 package io.georocket.input.geojson
 
 import de.undercouch.actson.JsonEvent
+import io.georocket.input.Splitter
 import io.georocket.input.json.JsonSplitter
 import io.georocket.storage.GeoJsonChunkMeta
 import io.georocket.storage.JsonChunkMeta

@@ -1,5 +1,6 @@
 package io.georocket.input.xml
 
+import io.georocket.input.Splitter
 import javax.xml.stream.events.XMLEvent
 
 import io.georocket.storage.XMLChunkMeta

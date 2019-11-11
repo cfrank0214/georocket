@@ -59,7 +59,7 @@ class MultiMerger
 
     override fun init(meta: ChunkMeta): Completable {
         return ensureMerger(meta)
-                .andThen(Completable.defer {
+                .andThen(Completable.defer Completable@{
                     if (meta is XMLChunkMeta) {
                         return@Completable.defer xmlMerger !!. init meta
                     }

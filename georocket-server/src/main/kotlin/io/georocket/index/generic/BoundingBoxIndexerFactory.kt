@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableMap
 
 import io.georocket.constants.ConfigConstants
 import io.georocket.index.IndexerFactory
+import io.georocket.query.QueryCompiler
 import io.georocket.util.CoordinateTransformer
 import io.vertx.core.Context
 import io.vertx.core.Vertx

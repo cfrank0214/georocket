@@ -14,6 +14,7 @@ import io.georocket.query.ElasticsearchQueryHelper.ltQuery
 import io.georocket.query.ElasticsearchQueryHelper.lteQuery
 import io.georocket.query.ElasticsearchQueryHelper.multiMatchQuery
 import io.georocket.query.ElasticsearchQueryHelper.termQuery
+import io.georocket.query.QueryCompiler
 
 /**
  * Creates instances of [XalAddressIndexer]

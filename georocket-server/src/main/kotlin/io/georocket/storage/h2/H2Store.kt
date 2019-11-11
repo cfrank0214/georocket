@@ -24,7 +24,7 @@ import io.vertx.core.json.JsonObject
  * Stores chunks on a H2 database
  * @author Michel Kraemer
  */
-class H2Store
+abstract class H2Store
 /**
  * Constructs a new store
  * @param vertx the Vert.x instance
@@ -101,7 +101,7 @@ class H2Store
      * Get or create the H2 MVMap
      * @return the MVMap
      */
-    fun getMap(): MutableMap<String, String> {
+    fun getMap(): Map<String, String>? {
         if (map == null) {
             map = mvStore!!.openMap(mapName)
         }
@@ -110,7 +110,7 @@ class H2Store
 
     override fun getOne(path: String, handler: Handler<AsyncResult<ChunkReadStream>>) {
         val finalPath = PathUtils.normalize(path)
-        val chunkStr = getMap()[finalPath]
+        val chunkStr = getMap()?.get(finalPath)
         if (chunkStr == null) {
             handler.handle(Future.failedFuture(FileNotFoundException(
                     "Could not find chunk: $finalPath")))

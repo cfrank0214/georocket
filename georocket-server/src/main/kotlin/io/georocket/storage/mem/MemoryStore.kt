@@ -23,7 +23,7 @@ import io.vertx.core.shareddata.AsyncMap
  * GeoRocket quits.**
  * @author Michel Kraemer
  */
-class MemoryStore
+abstract class MemoryStore
 /**
  * Default constructor
  * @param vertx the Vert.x instance
@@ -31,7 +31,7 @@ class MemoryStore
 (private val vertx: Vertx) : IndexedStore(vertx), Store {
     private var store: AsyncMap<String, Buffer>? = null
 
-    private fun getStore(handler: Handler<AsyncResult<AsyncMap<String, Buffer>>>) {
+    private fun getStore(handler: (Any) -> Unit) {
         if (store != null) {
             handler.handle(Future.succeededFuture(store))
             return
@@ -54,7 +54,7 @@ class MemoryStore
         }
         val filename = PathUtils.join(path, generateChunkId(correlationId))
 
-        getStore({ ar ->
+        getStore { ar ->
             if (ar.failed()) {
                 handler.handle(Future.failedFuture<String>(ar.cause()))
             } else {
@@ -66,12 +66,12 @@ class MemoryStore
                     }
                 })
             }
-        })
+        }
     }
 
     override fun getOne(path: String, handler: Handler<AsyncResult<ChunkReadStream>>) {
         val finalPath = PathUtils.normalize(path)
-        getStore({ ar ->
+        getStore { ar ->
             if (ar.failed()) {
                 handler.handle(Future.failedFuture<ChunkReadStream>(ar.cause()))
             } else {
@@ -89,17 +89,17 @@ class MemoryStore
                     }
                 })
             }
-        })
+        }
     }
 
     override fun doDeleteChunks(paths: Queue<String>, handler: Handler<AsyncResult<Void>>) {
-        getStore({ ar ->
+        getStore { ar ->
             if (ar.failed()) {
                 handler.handle(Future.failedFuture<Void>(ar.cause()))
             } else {
                 doDeleteChunks(paths, ar.result(), handler)
             }
-        })
+        }
     }
 
     private fun doDeleteChunks(paths: Queue<String>, store: AsyncMap<String, Buffer>,

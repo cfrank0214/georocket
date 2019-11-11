@@ -27,6 +27,7 @@ import java.util.Objects
 import java.util.Queue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.function.Consumer
 import java.util.function.Function
 
 /**
@@ -91,7 +92,7 @@ abstract class IndexedStore
     private fun startPurgingTask(correlationId: String?, totalChunks: Int) {
         val purgingTask = PurgingTask(correlationId)
         purgingTask.startTime = Instant.now()
-        purgingTask.totalChunks = totalChunks
+        purgingTask.totalChunks = totalChunks.toLong()
         vertx.eventBus().publish(AddressConstants.TASK_INC,
                 JsonObject.mapFrom(purgingTask))
     }
@@ -120,7 +121,7 @@ abstract class IndexedStore
      */
     private fun updatePurgingTask(correlationId: String?, purgedChunks: Int) {
         val purgingTask = PurgingTask(correlationId)
-        purgingTask.purgedChunks = purgedChunks
+        purgingTask.purgedChunks = purgedChunks.toLong()
         vertx.eventBus().publish(AddressConstants.TASK_INC,
                 JsonObject.mapFrom(purgingTask))
     }
@@ -190,7 +191,7 @@ abstract class IndexedStore
      */
     private fun doDelete(cursor: StoreCursor, paths: Queue<String>,
                          remainingChunks: AtomicLong, correlationId: String?,
-                         handler: Handler<AsyncResult<Void>>) {
+                         handler: (Any) -> Unit) {
         // handle response of bulk delete operation
         val handleBulk = { size ->
             { bulkAr ->
@@ -378,7 +379,7 @@ abstract class IndexedStore
      * @param handler will be called when the operation has finished
      */
     protected abstract fun doAddChunk(chunk: String, path: String,
-                                      correlationId: String, handler: Handler<AsyncResult<String>>)
+                                      correlationId: String, handler: (Any) -> Unit)
 
     /**
      * Delete all chunks with the given paths from the store. Remove one item

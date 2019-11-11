@@ -23,6 +23,7 @@ import io.vertx.rxjava.core.Vertx
 import rx.Completable
 import rx.Observable
 import rx.Single
+import java.util.concurrent.Callable
 
 /**
  * Runs an Elasticsearch instance

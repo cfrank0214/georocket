@@ -38,7 +38,7 @@ import io.vertx.core.logging.LoggerFactory
  * Stores chunks on Amazon S3
  * @author Michel Kraemer
  */
-class S3Store
+abstract class S3Store
 /**
  * Constructs a new store
  * @param vertx the Vert.x instance
@@ -94,7 +94,7 @@ class S3Store
      * @return the S3 client
      */
     @Synchronized
-    private fun getS3Client(): AmazonS3 {
+    private fun getS3Client(): AmazonS3? {
         if (s3Client == null) {
             val credentials = BasicAWSCredentials(accessKey, secretKey)
 

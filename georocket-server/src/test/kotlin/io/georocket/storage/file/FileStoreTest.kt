@@ -1,112 +1,111 @@
-package io.georocket.storage.file;
+package io.georocket.storage.file
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.Before
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 
-import io.georocket.constants.ConfigConstants;
-import io.georocket.storage.StorageTest;
-import io.georocket.storage.Store;
-import io.georocket.util.PathUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
+import io.georocket.constants.ConfigConstants
+import io.georocket.storage.StorageTest
+import io.georocket.storage.Store
+import io.georocket.util.PathUtils
+import io.vertx.core.AsyncResult
+import io.vertx.core.Handler
+import io.vertx.core.Vertx
+import io.vertx.ext.unit.TestContext
 
 /**
- * Test {@link FileStore}
+ * Test [FileStore]
  * @author Andrej Sajenko
  */
-public class FileStoreTest extends StorageTest {
-  /**
-   * Create a temporary tempFolder
-   */
-  @Rule
-  public TemporaryFolder tempFolder = new TemporaryFolder();
+class FileStoreTest : StorageTest() {
+    /**
+     * Create a temporary tempFolder
+     */
+    @Rule
+    var tempFolder = TemporaryFolder()
 
-  private String fileStoreRoot;
-  private String fileDestination;
+    private var fileStoreRoot: String? = null
+    private var fileDestination: String? = null
 
-  /**
-   * Set up test dependencies.
-   */
-  @Before
-  public void setUp() {
-    fileStoreRoot = tempFolder.getRoot().getAbsolutePath();
-    fileDestination = PathUtils.join(fileStoreRoot, "file");
-  }
+    /**
+     * Set up test dependencies.
+     */
+    @Before
+    fun setUp() {
+        fileStoreRoot = tempFolder.root.absolutePath
+        fileDestination = PathUtils.join(fileStoreRoot, "file")
+    }
 
-  private void configureVertx(Vertx vertx) {
-    vertx.getOrCreateContext().config().put(ConfigConstants.INSTANCE.getSTORAGE_FILE_PATH(), fileStoreRoot);
-  }
+    private fun configureVertx(vertx: Vertx) {
+        vertx.orCreateContext.config().put(ConfigConstants.STORAGE_FILE_PATH, fileStoreRoot)
+    }
 
-  @Override
-  protected Store createStore(Vertx vertx) {
-    configureVertx(vertx);
-    return new FileStore(vertx);
-  }
+    override fun createStore(vertx: Vertx): Store {
+        configureVertx(vertx)
+        return FileStore(vertx)
+    }
 
-  @Override
-  protected void prepareData(TestContext context, Vertx vertx, String subPath,
-      Handler<AsyncResult<String>> handler) {
-    vertx.executeBlocking(f -> {
-      String destinationFolder = subPath == null || subPath.isEmpty() ?
-          fileDestination : PathUtils.join(fileDestination, subPath);
-      Path filePath = Paths.get(destinationFolder.toString(), ID);
-      try {
-        Files.createDirectories(Paths.get(destinationFolder));
-        Files.write(filePath, CHUNK_CONTENT.getBytes());
-        f.complete(filePath.toString().replace(fileDestination + "/", ""));
-      } catch (IOException ex) {
-        f.fail(ex);
-      }
-    }, handler);
-  }
+    override fun prepareData(context: TestContext, vertx: Vertx, subPath: String?,
+                             handler: Handler<AsyncResult<String>>) {
+        vertx.executeBlocking({ f ->
+            val destinationFolder = if (subPath == null || subPath.isEmpty())
+                fileDestination
+            else
+                PathUtils.join(fileDestination, subPath)
+            val filePath = Paths.get(destinationFolder!!.toString(), StorageTest.ID)
+            try {
+                Files.createDirectories(Paths.get(destinationFolder))
+                Files.write(filePath, StorageTest.CHUNK_CONTENT.toByteArray())
+                f.complete(filePath.toString().replace(fileDestination!! + "/", ""))
+            } catch (ex: IOException) {
+                f.fail(ex)
+            }
+        }, handler)
+    }
 
-  @Override
-  protected void validateAfterStoreAdd(TestContext context, Vertx vertx,
-      String path, Handler<AsyncResult<Void>> handler) {
-    vertx.executeBlocking(f -> {
-      String destinationFolder = path == null || path.isEmpty() ?
-          fileDestination : PathUtils.join(fileDestination, path);
-      
-      File folder = new File(destinationFolder);
-      context.assertTrue(folder.exists());
+    override fun validateAfterStoreAdd(context: TestContext, vertx: Vertx,
+                                       path: String?, handler: Handler<AsyncResult<Void>>) {
+        vertx.executeBlocking({ f ->
+            val destinationFolder = if (path == null || path.isEmpty())
+                fileDestination
+            else
+                PathUtils.join(fileDestination, path)
 
-      File[] files = folder.listFiles();
-      context.assertNotNull(files);
-      context.assertEquals(1, files.length);
-      File file = files[0];
+            val folder = File(destinationFolder!!)
+            context.assertTrue(folder.exists())
 
-      List<String> lines;
-      try {
-        lines = Files.readAllLines(file.toPath());
-      } catch (IOException ex) {
-        f.fail(ex);
-        return;
-      }
-      
-      context.assertFalse(lines.isEmpty());
-      String firstLine = lines.get(0);
-      context.assertEquals(CHUNK_CONTENT, firstLine);
-      
-      f.complete();
-    }, handler);
-  }
+            val files = folder.listFiles()
+            context.assertNotNull(files)
+            context.assertEquals(1, files!!.size)
+            val file = files[0]
 
-  @Override
-  protected void validateAfterStoreDelete(TestContext context,
-      Vertx vertx, String path, Handler<AsyncResult<Void>> handler) {
-    vertx.executeBlocking(f -> {
-      context.assertFalse(Files.exists(Paths.get(path)));
-      f.complete();
-    }, handler);
-  }
+            val lines: List<String>
+            try {
+                lines = Files.readAllLines(file.toPath())
+            } catch (ex: IOException) {
+                f.fail(ex)
+                return@vertx.executeBlocking
+            }
+
+            context.assertFalse(lines.isEmpty())
+            val firstLine = lines[0]
+            context.assertEquals(StorageTest.CHUNK_CONTENT, firstLine)
+
+            f.complete()
+        }, handler)
+    }
+
+    override fun validateAfterStoreDelete(context: TestContext,
+                                          vertx: Vertx, path: String, handler: Handler<AsyncResult<Void>>) {
+        vertx.executeBlocking({ f ->
+            context.assertFalse(Files.exists(Paths.get(path)))
+            f.complete()
+        }, handler)
+    }
 }

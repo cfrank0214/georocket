@@ -1,333 +1,311 @@
-package io.georocket.query.parser;
+package io.georocket.query.parser
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.io.IOException
+import java.net.URL
+import java.nio.charset.StandardCharsets
+import java.util.ArrayDeque
+import java.util.Deque
 
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
+import org.antlr.v4.runtime.ANTLRInputStream
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ErrorNode
+import org.antlr.v4.runtime.tree.ParseTreeWalker
+import org.apache.commons.io.IOUtils
+import org.junit.Test
 
-import io.georocket.query.parser.QueryParser.AndContext;
-import io.georocket.query.parser.QueryParser.EqContext;
-import io.georocket.query.parser.QueryParser.GtContext;
-import io.georocket.query.parser.QueryParser.GteContext;
-import io.georocket.query.parser.QueryParser.KeyvalueContext;
-import io.georocket.query.parser.QueryParser.LtContext;
-import io.georocket.query.parser.QueryParser.LteContext;
-import io.georocket.query.parser.QueryParser.NotContext;
-import io.georocket.query.parser.QueryParser.OrContext;
-import io.georocket.query.parser.QueryParser.QueryContext;
-import io.georocket.query.parser.QueryParser.StringContext;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import io.georocket.query.parser.QueryParser.AndContext
+import io.georocket.query.parser.QueryParser.EqContext
+import io.georocket.query.parser.QueryParser.GtContext
+import io.georocket.query.parser.QueryParser.GteContext
+import io.georocket.query.parser.QueryParser.KeyvalueContext
+import io.georocket.query.parser.QueryParser.LtContext
+import io.georocket.query.parser.QueryParser.LteContext
+import io.georocket.query.parser.QueryParser.NotContext
+import io.georocket.query.parser.QueryParser.OrContext
+import io.georocket.query.parser.QueryParser.QueryContext
+import io.georocket.query.parser.QueryParser.StringContext
+import io.vertx.core.json.JsonArray
+import io.vertx.core.json.JsonObject
 
 /**
- * Test {@link QueryParser}
+ * Test [QueryParser]
  * @author Michel Kraemer
  */
-public class QueryParserTest {
-  /**
-   * Convert a parse tree to a JsonObject
-   */
-  private static class ToJsonTreeListener extends QueryBaseListener {
-    Deque<JsonObject> tree = new ArrayDeque<JsonObject>();
-    
-    final static String TYPE = "type";
-    final static String TEXT = "text";
-    final static String QUERY = "query";
-    final static String STRING = "string";
-    final static String OR = "or";
-    final static String AND = "and";
-    final static String NOT = "not";
-    final static String EQ = "eq";
-    final static String LT = "lt";
-    final static String LTE = "lte";
-    final static String GT = "gt";
-    final static String GTE = "gte";
-    final static String KEYVALUE = "keyvalue";
-    final static String CHILDREN = "children";
-    
-    ToJsonTreeListener() {
-      push(QUERY);
-    }
-    
-    private void push(String type) {
-      push(type, null);
-    }
-    
-    private void push(String type, String text) {
-      JsonObject obj = new JsonObject().put(TYPE, type);
-      if (text != null) {
-        obj.put(TEXT, text);
-      }
-      if (!tree.isEmpty()) {
-        JsonArray children = tree.peek().getJsonArray(CHILDREN);
-        if (children == null) {
-          children = new JsonArray();
-          tree.peek().put(CHILDREN, children);
+class QueryParserTest {
+    /**
+     * Convert a parse tree to a JsonObject
+     */
+    private class ToJsonTreeListener internal constructor() : QueryBaseListener() {
+        internal var tree: Deque<JsonObject> = ArrayDeque()
+
+        init {
+            push(QUERY)
         }
-        children.add(obj);
-      }
-      tree.push(obj);
-    }
-    
-    @Override
-    public void enterOr(OrContext ctx) {
-      push(OR);
-    }
-    
-    @Override
-    public void exitOr(OrContext ctx) {
-      tree.pop();
-    }
-    
-    @Override
-    public void enterAnd(AndContext ctx) {
-      push(AND);
-    }
-    
-    @Override
-    public void exitAnd(AndContext ctx) {
-      tree.pop();
-    }
-    
-    @Override
-    public void enterNot(NotContext ctx) {
-      push(NOT);
-    }
-    
-    @Override
-    public void exitNot(NotContext ctx) {
-      tree.pop();
-    }
-    
-    @Override
-    public void enterEq(EqContext ctx) {
-      push(EQ);
-    }
-    
-    @Override
-    public void exitEq(EqContext ctx) {
-      tree.pop();
+
+        private fun push(type: String, text: String? = null) {
+            val obj = JsonObject().put(TYPE, type)
+            if (text != null) {
+                obj.put(TEXT, text)
+            }
+            if (!tree.isEmpty()) {
+                var children: JsonArray? = tree.peek().getJsonArray(CHILDREN)
+                if (children == null) {
+                    children = JsonArray()
+                    tree.peek().put(CHILDREN, children)
+                }
+                children.add(obj)
+            }
+            tree.push(obj)
+        }
+
+        fun enterOr(ctx: OrContext) {
+            push(OR)
+        }
+
+        fun exitOr(ctx: OrContext) {
+            tree.pop()
+        }
+
+        fun enterAnd(ctx: AndContext) {
+            push(AND)
+        }
+
+        fun exitAnd(ctx: AndContext) {
+            tree.pop()
+        }
+
+        fun enterNot(ctx: NotContext) {
+            push(NOT)
+        }
+
+        fun exitNot(ctx: NotContext) {
+            tree.pop()
+        }
+
+        fun enterEq(ctx: EqContext) {
+            push(EQ)
+        }
+
+        fun exitEq(ctx: EqContext) {
+            tree.pop()
+        }
+
+        fun enterGt(ctx: GtContext) {
+            push(GT)
+        }
+
+        fun exitGt(ctx: GtContext) {
+            tree.pop()
+        }
+
+        fun enterGte(ctx: GteContext) {
+            push(GTE)
+        }
+
+        fun exitGte(ctx: GteContext) {
+            tree.pop()
+        }
+
+        fun enterLt(ctx: LtContext) {
+            push(LT)
+        }
+
+        fun exitLt(ctx: LtContext) {
+            tree.pop()
+        }
+
+        fun enterLte(ctx: LteContext) {
+            push(LTE)
+        }
+
+        fun exitLte(ctx: LteContext) {
+            tree.pop()
+        }
+
+        fun enterKeyvalue(ctx: KeyvalueContext) {
+            push(KEYVALUE)
+        }
+
+        fun exitKeyvalue(ctx: KeyvalueContext) {
+            tree.pop()
+        }
+
+        fun enterString(ctx: StringContext) {
+            push(STRING, ctx.getText())
+        }
+
+        fun exitString(ctx: StringContext) {
+            tree.pop()
+        }
+
+        fun visitErrorNode(node: ErrorNode) {
+            fail()
+        }
+
+        companion object {
+
+            internal val TYPE = "type"
+            internal val TEXT = "text"
+            internal val QUERY = "query"
+            internal val STRING = "string"
+            internal val OR = "or"
+            internal val AND = "and"
+            internal val NOT = "not"
+            internal val EQ = "eq"
+            internal val LT = "lt"
+            internal val LTE = "lte"
+            internal val GT = "gt"
+            internal val GTE = "gte"
+            internal val KEYVALUE = "keyvalue"
+            internal val CHILDREN = "children"
+        }
     }
 
-    @Override
-    public void enterGt(GtContext ctx) {
-      push(GT);
+    /**
+     * Load a fixture, parse and check the result
+     * @param fixture the name of the fixture to load (without path and extension)
+     */
+    private fun expectFixture(fixture: String) {
+        // load file
+        val u = this.javaClass.getResource("fixtures/$fixture.json")
+        val fixtureStr: String
+        try {
+            fixtureStr = IOUtils.toString(u, StandardCharsets.UTF_8)
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+
+        // get query and expected tree
+        val fixtureObj = JsonObject(fixtureStr)
+        val query = fixtureObj.getString("query")
+        val expected = fixtureObj.getJsonObject("expected")
+
+        // parse query
+        val lexer = QueryLexer(ANTLRInputStream(query.trim { it <= ' ' }))
+        val tokens = CommonTokenStream(lexer)
+        val parser = QueryParser(tokens)
+        val ctx = parser.query()
+        val listener = ToJsonTreeListener()
+        ParseTreeWalker.DEFAULT.walk(listener, ctx)
+
+        // assert tree
+        assertEquals(1, listener.tree.size.toLong())
+        val root = listener.tree.pop()
+        assertEquals(expected, root)
     }
 
-    @Override
-    public void exitGt(GtContext ctx) {
-      tree.pop();
+    /**
+     * Query with a single string
+     */
+    @Test
+    fun string() {
+        expectFixture("string")
     }
 
-    @Override
-    public void enterGte(GteContext ctx) {
-      push(GTE);
+    /**
+     * Query with two strings
+     */
+    @Test
+    fun strings() {
+        expectFixture("strings")
     }
 
-    @Override
-    public void exitGte(GteContext ctx) {
-      tree.pop();
+    /**
+     * EQuals
+     */
+    @Test
+    fun eq() {
+        expectFixture("eq")
     }
 
-    @Override
-    public void enterLt(LtContext ctx) {
-      push(LT);
+    /**
+     * Greater than (GT)
+     */
+    @Test
+    fun gt() {
+        expectFixture("gt")
     }
 
-    @Override
-    public void exitLt(LtContext ctx) {
-      tree.pop();
+    /**
+     * Greater than or equal (GTE)
+     */
+    @Test
+    fun gte() {
+        expectFixture("gte")
     }
 
-    @Override
-    public void enterLte(LteContext ctx) {
-      push(LTE);
+    /**
+     * Less than (LT)
+     */
+    @Test
+    fun lt() {
+        expectFixture("lt")
     }
 
-    @Override
-    public void exitLte(LteContext ctx) {
-      tree.pop();
+    /**
+     * Less than or equal (LTE)
+     */
+    @Test
+    fun lte() {
+        expectFixture("lte")
     }
 
-    @Override
-    public void enterKeyvalue(KeyvalueContext ctx) {
-      push(KEYVALUE);
-    }
-    
-    @Override
-    public void exitKeyvalue(KeyvalueContext ctx) {
-      tree.pop();
-    }
-    
-    @Override
-    public void enterString(StringContext ctx) {
-      push(STRING, ctx.getText());
-    }
-    
-    @Override
-    public void exitString(StringContext ctx) {
-      tree.pop();
+    /**
+     * Explicit OR
+     */
+    @Test
+    fun or() {
+        expectFixture("or")
     }
 
-    @Override
-    public void visitErrorNode(ErrorNode node) {
-      fail();
+    /**
+     * Logical AND
+     */
+    @Test
+    fun and() {
+        expectFixture("and")
     }
-  }
-  
-  /**
-   * Load a fixture, parse and check the result
-   * @param fixture the name of the fixture to load (without path and extension)
-   */
-  private void expectFixture(String fixture) {
-    // load file
-    URL u = this.getClass().getResource("fixtures/" + fixture + ".json");
-    String fixtureStr;
-    try {
-      fixtureStr = IOUtils.toString(u, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+
+    /**
+     * Logical NOT
+     */
+    @Test
+    operator fun not() {
+        expectFixture("not")
     }
-    
-    // get query and expected tree
-    JsonObject fixtureObj = new JsonObject(fixtureStr);
-    String query = fixtureObj.getString("query");
-    JsonObject expected = fixtureObj.getJsonObject("expected");
-    
-    // parse query
-    QueryLexer lexer = new QueryLexer(new ANTLRInputStream(query.trim()));
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-    QueryParser parser = new QueryParser(tokens);
-    QueryContext ctx = parser.query();
-    ToJsonTreeListener listener = new ToJsonTreeListener();
-    ParseTreeWalker.DEFAULT.walk(listener, ctx);
-    
-    // assert tree
-    assertEquals(1, listener.tree.size());
-    JsonObject root = listener.tree.pop();
-    assertEquals(expected, root);
-  }
-  
-  /**
-   * Query with a single string
-   */
-  @Test
-  public void string() {
-    expectFixture("string");
-  }
-  
-  /**
-   * Query with two strings
-   */
-  @Test
-  public void strings() {
-    expectFixture("strings");
-  }
-  
-  /**
-   * EQuals
-   */
-  @Test
-  public void eq() {
-    expectFixture("eq");
-  }
 
-  /**
-   * Greater than (GT)
-   */
-  @Test
-  public void gt() {
-    expectFixture("gt");
-  }
+    /**
+     * Logical NOT with nested EQ
+     */
+    @Test
+    fun notEq() {
+        expectFixture("not_eq")
+    }
 
-  /**
-   * Greater than or equal (GTE)
-   */
-  @Test
-  public void gte() {
-    expectFixture("gte");
-  }
+    /**
+     * Query with a double-quoted string
+     */
+    @Test
+    fun doubleQuotedString() {
+        expectFixture("double_quoted_string")
+    }
 
-  /**
-   * Less than (LT)
-   */
-  @Test
-  public void lt() {
-    expectFixture("lt");
-  }
+    /**
+     * Query with a single-quoted string
+     */
+    @Test
+    fun singleQuotedString() {
+        expectFixture("single_quoted_string")
+    }
 
-  /**
-   * Less than or equal (LTE)
-   */
-  @Test
-  public void lte() {
-    expectFixture("lte");
-  }
-
-  /**
-   * Explicit OR
-   */
-  @Test
-  public void or() {
-    expectFixture("or");
-  }
-  
-  /**
-   * Logical AND
-   */
-  @Test
-  public void and() {
-    expectFixture("and");
-  }
-  
-  /**
-   * Logical NOT
-   */
-  @Test
-  public void not() {
-    expectFixture("not");
-  }
-
-  /**
-   * Logical NOT with nested EQ
-   */
-  @Test
-  public void notEq() {
-    expectFixture("not_eq");
-  }
-
-  /**
-   * Query with a double-quoted string
-   */
-  @Test
-  public void doubleQuotedString() {
-    expectFixture("double_quoted_string");
-  }
-  
-  /**
-   * Query with a single-quoted string
-   */
-  @Test
-  public void singleQuotedString() {
-    expectFixture("single_quoted_string");
-  }
-  
-  /**
-   * Query with a quoted OR
-   */
-  @Test
-  public void quotedOr() {
-    expectFixture("quoted_or");
-  }
+    /**
+     * Query with a quoted OR
+     */
+    @Test
+    fun quotedOr() {
+        expectFixture("quoted_or")
+    }
 }

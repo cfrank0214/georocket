@@ -1,63 +1,58 @@
-package io.georocket.http.mocks;
+package io.georocket.http.mocks
 
-import java.util.Queue;
+import java.util.Queue
 
-import io.georocket.storage.ChunkMeta;
-import io.georocket.storage.ChunkReadStream;
-import io.georocket.storage.IndexMeta;
-import io.georocket.storage.indexed.IndexedStore;
-import io.georocket.util.io.DelegateChunkReadStream;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
+import io.georocket.storage.ChunkMeta
+import io.georocket.storage.ChunkReadStream
+import io.georocket.storage.IndexMeta
+import io.georocket.storage.indexed.IndexedStore
+import io.georocket.util.io.DelegateChunkReadStream
+import io.vertx.core.AsyncResult
+import io.vertx.core.Future
+import io.vertx.core.Handler
+import io.vertx.core.Vertx
+import io.vertx.core.buffer.Buffer
 
 /**
  * Mock for the GeoRocket indexed store
  * @author David Gengenbach
  */
-public class MockStore extends IndexedStore {
-  static final String RETURNED_CHUNK = "{\"type\":\"Polygon\"}";
+class MockStore
+/**
+ * Standard constructor
+ * @param vertx vertx instance
+ */
+(vertx: Vertx) : IndexedStore(vertx) {
 
-  /**
-   * Standard constructor 
-   * @param vertx vertx instance
-   */
-  public MockStore(Vertx vertx) {
-    super(vertx);
-  }
+    override fun getOne(path: String, handler: Handler<AsyncResult<ChunkReadStream>>) {
+        val chunk = Buffer.buffer(RETURNED_CHUNK)
+        handler.handle(Future.succeededFuture(DelegateChunkReadStream(chunk)))
+    }
 
-  @Override
-  public void getOne(String path, Handler<AsyncResult<ChunkReadStream>> handler) {
-    Buffer chunk = Buffer.buffer(RETURNED_CHUNK);
-    handler.handle(Future.succeededFuture(new DelegateChunkReadStream(chunk)));
-  }
+    override fun delete(search: String, path: String, handler: Handler<AsyncResult<Void>>) {
+        notImplemented(handler)
+    }
 
-  @Override
-  public void delete(String search, String path, Handler<AsyncResult<Void>> handler) {
-    notImplemented(handler);
-  }
+    override fun doAddChunk(chunk: String, path: String, correlationId: String,
+                            handler: Handler<AsyncResult<String>>) {
+        notImplemented(handler)
+    }
 
-  @Override
-  protected void doAddChunk(String chunk, String path, String correlationId,
-      Handler<AsyncResult<String>> handler) {
-    notImplemented(handler);
-  }
+    override fun doDeleteChunks(paths: Queue<String>, handler: Handler<AsyncResult<Void>>) {
+        notImplemented(handler)
+    }
 
-  @Override
-  protected void doDeleteChunks(Queue<String> paths, Handler<AsyncResult<Void>> handler) {
-    notImplemented(handler);
-  }
+    override fun add(chunk: String, chunkMeta: ChunkMeta, path: String, indexMeta: IndexMeta,
+                     handler: Handler<AsyncResult<Void>>) {
+        notImplemented(handler)
+    }
 
-  @Override
-  public void add(String chunk, ChunkMeta chunkMeta, String path, IndexMeta indexMeta,
-      Handler<AsyncResult<Void>> handler) {
-    notImplemented(handler);
-  }
+    private fun <T> notImplemented(handler: Handler<AsyncResult<T>>) {
+        handler.handle(Future.failedFuture("NOT IMPLEMENTED"))
+    }
 
-  private <T> void notImplemented(Handler<AsyncResult<T>> handler) {
-    handler.handle(Future.failedFuture("NOT IMPLEMENTED"));
-  }
+    companion object {
+        internal val RETURNED_CHUNK = "{\"type\":\"Polygon\"}"
+    }
 }
 

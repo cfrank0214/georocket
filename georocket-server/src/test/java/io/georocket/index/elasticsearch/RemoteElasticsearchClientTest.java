@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
@@ -178,7 +177,8 @@ public class RemoteElasticsearchClientTest {
    */
   @Test
   public void typeIndexExistsTrue(TestContext context) {
-    wireMockRule1.stubFor(head(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE))
+    wireMockRule1.stubFor(head(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE +
+          "?include_type_name=true"))
       .willReturn(aResponse()
         .withStatus(200)));
 
@@ -195,7 +195,8 @@ public class RemoteElasticsearchClientTest {
    */
   @Test
   public void putMapping(TestContext context) {
-    wireMockRule1.stubFor(put(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE))
+    wireMockRule1.stubFor(put(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE +
+          "?include_type_name=true"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(ACKNOWLEDGED.encode())));
@@ -207,7 +208,8 @@ public class RemoteElasticsearchClientTest {
 
     Async async = context.async();
     client.putMapping(TYPE, mappings).subscribe(ack -> {
-      wireMockRule1.verify(putRequestedFor(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE))
+      wireMockRule1.verify(putRequestedFor(urlEqualTo("/" + INDEX + "/_mapping/" + TYPE +
+            "?include_type_name=true"))
         .withRequestBody(equalToJson("{\"properties\":{\"name\":{\"type\":\"text\"}}}}}")));
       context.assertTrue(ack);
       async.complete();
@@ -221,7 +223,6 @@ public class RemoteElasticsearchClientTest {
   @Test
   public void createIndex(TestContext context) {
     StubMapping settings = wireMockRule1.stubFor(put(urlEqualTo("/" + INDEX))
-      .withRequestBody(equalTo(""))
       .willReturn(aResponse()
         .withBody(ACKNOWLEDGED.encode())
         .withStatus(200)));
